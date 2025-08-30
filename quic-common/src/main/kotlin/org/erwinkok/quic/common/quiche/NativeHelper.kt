@@ -28,7 +28,7 @@ object NativeHelper {
     val C_POINTER = ValueLayout.ADDRESS.withTargetLayout(MemoryLayout.sequenceLayout(Long.Companion.MAX_VALUE, ValueLayout.JAVA_BYTE))
     val Platform: PlatformType
 
-    private val SYMBOL_LOOKUP: SymbolLookup = SymbolLookup.loaderLookup().or(Linker.nativeLinker().defaultLookup())
+    private val SYMBOL_LOOKUP = SymbolLookup.loaderLookup().or(Linker.nativeLinker().defaultLookup())
 
     init {
         var arch = System.getProperty("os.arch")
