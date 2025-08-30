@@ -11,13 +11,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.erwinkok.quic.common.AwaitableClosable
+import org.erwinkok.quic.common.QuicConfiguration
 
 private val logger = KotlinLogging.logger {}
 
 class QuicheServerConnection(
     scope: CoroutineScope,
     private val inetLocalAddress: InetSocketAddress,
-    private val quicConfiguration: QuicheServerQuicConfiguration,
+    private val quicConfiguration: QuicConfiguration,
     private val socket: BoundDatagramSocket,
 ) : AwaitableClosable {
     private val context = Job(scope.coroutineContext[Job])
@@ -44,7 +45,7 @@ class QuicheServerConnection(
         suspend fun create(
             scope: CoroutineScope,
             inetLocalAddress: InetSocketAddress,
-            quicConfiguration: QuicheServerQuicConfiguration,
+            quicConfiguration: QuicConfiguration,
         ): QuicheServerConnection {
             val socket = aSocket(ActorSelectorManager(Dispatchers.IO)).udp().bind(inetLocalAddress)
             return QuicheServerConnection(scope, inetLocalAddress, quicConfiguration, socket)

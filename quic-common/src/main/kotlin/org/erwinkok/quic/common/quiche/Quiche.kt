@@ -39,6 +39,7 @@ object Quiche {
             val SCOPE: Arena = Arena.ofAuto()
         }
 
+        // Called from native Quiche library
         fun log(msg: MemorySegment, argp: MemorySegment?) {
             logger.debug { "[Quiche] ${msg.getUtf8String(0L)}" }
         }
@@ -52,6 +53,10 @@ object Quiche {
         return DowncallHandles.quiche_enable_debug_logging.invokeExact(cb, argp) as Int
     }
 
+    fun quiche_config_new(version: Int): MemorySegment? {
+        return DowncallHandles.quiche_config_new.invokeExact(version) as? MemorySegment
+    }
+
     private object DowncallHandles {
         val quiche_version = NativeHelper.downcallHandle(
             "quiche_version",
@@ -63,6 +68,13 @@ object Quiche {
                 C_INT,
                 NativeHelper.C_POINTER,
                 NativeHelper.C_POINTER,
+            ),
+        )
+        val quiche_config_new = NativeHelper.downcallHandle(
+            "quiche_config_new",
+            FunctionDescriptor.of(
+                C_POINTER,
+                C_INT,
             ),
         )
     }
