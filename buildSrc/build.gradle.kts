@@ -10,7 +10,6 @@ repositories {
 
 dependencies {
     implementation(libs.buildscript.kotlin)
-    implementation(libs.buildscript.ktjni)
     implementation(libs.buildscript.ktlint)
     implementation(libs.buildscript.testlogger)
     implementation(libs.buildscript.versions)

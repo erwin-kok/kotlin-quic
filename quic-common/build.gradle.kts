@@ -6,8 +6,6 @@ group = "org.erwinkok.quic"
 version = "0.1.0"
 
 dependencies {
-    implementation(projects.quicCommon)
-
     implementation(libs.kotlinx.coroutines)
     implementation(libs.kotlin.logging)
     implementation(libs.ktor.network)

@@ -3,7 +3,6 @@ junit-jupiter = "5.13.4"
 kotlin = "2.2.10"
 kotlinx-coroutines = "1.10.2"
 kotlin-logging = "7.0.13"
-ktjni-plugin = "0.1.0"
 ktlint = "12.1.2"
 ktor = "3.2.3"
 logback-classic = "1.5.17"
@@ -23,7 +22,6 @@ oshai-logging = { module = "io.github.oshai:kotlin-logging", version.ref = "osha
 mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockito-kotlin" }
 
 buildscript-kotlin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
-buildscript-ktjni = { module = "io.github.fletchmckee.ktjni:io.github.fletchmckee.ktjni.gradle.plugin", version.ref = "ktjni-plugin" }
 buildscript-ktlint = { module = "org.jlleitschuh.gradle:ktlint-gradle", version.ref = "ktlint" }
 buildscript-testlogger = { module = "com.adarshr:gradle-test-logger-plugin", version.ref = "testlogger-plugin" }
 buildscript-versions = { module = "com.github.ben-manes.versions:com.github.ben-manes.versions.gradle.plugin", version.ref = "versions-plugin" }
