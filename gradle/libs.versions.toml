@@ -1,0 +1,32 @@
+[versions]
+junit-jupiter = "5.13.4"
+kotlin = "2.2.10"
+kotlinx-coroutines = "1.10.2"
+kotlin-logging = "7.0.13"
+ktjni-plugin = "0.1.0"
+ktlint = "12.1.2"
+ktor = "3.2.3"
+logback-classic = "1.5.17"
+testlogger-plugin = "4.0.0"
+oshai = "7.0.4"
+mockito-kotlin = "6.0.0"
+versions-plugin = "0.52.0"
+
+[libraries]
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit-jupiter" }
+kotlinx-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
+kotlin-logging = { module = "io.github.oshai:kotlin-logging", version.ref = "kotlin-logging" }
+ktor-network = { module = "io.ktor:ktor-network", version.ref = "ktor" }
+logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback-classic" }
+oshai-logging = { module = "io.github.oshai:kotlin-logging", version.ref = "oshai" }
+mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockito-kotlin" }
+
+buildscript-kotlin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+buildscript-ktjni = { module = "io.github.fletchmckee.ktjni:io.github.fletchmckee.ktjni.gradle.plugin", version.ref = "ktjni-plugin" }
+buildscript-ktlint = { module = "org.jlleitschuh.gradle:ktlint-gradle", version.ref = "ktlint" }
+buildscript-testlogger = { module = "com.adarshr:gradle-test-logger-plugin", version.ref = "testlogger-plugin" }
+buildscript-versions = { module = "com.github.ben-manes.versions:com.github.ben-manes.versions.gradle.plugin", version.ref = "versions-plugin" }
+
+[plugins]
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
