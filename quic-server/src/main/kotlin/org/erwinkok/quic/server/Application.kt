@@ -9,7 +9,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.runBlocking
 import org.erwinkok.quic.common.CongestionControlAlgorithm
 import org.erwinkok.quic.common.QuicConfiguration
-import org.erwinkok.quic.common.quiche.Quiche
 import kotlin.io.path.Path
 
 private val logger = KotlinLogging.logger {}
@@ -19,9 +18,6 @@ const val MAX_DATAGRAM_SIZE = 1350
 fun main() {
     runBlocking {
         logger.info { "Starting QuicServer..." }
-
-        Quiche.quiche_version()
-
         val quicConfiguration = QuicConfiguration(
             certificateChainPemPath = Path("./cert.crt"),
             privateKeyPemPath = Path("./cert.key"),
