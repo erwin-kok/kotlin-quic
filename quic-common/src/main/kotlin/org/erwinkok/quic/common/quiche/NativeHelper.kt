@@ -21,7 +21,6 @@ object NativeHelper {
 
     val C_BYTE: ValueLayout.OfByte = ValueLayout.JAVA_BYTE
     val C_BOOL: ValueLayout.OfByte = ValueLayout.JAVA_BYTE
-    val C_CHAR: ValueLayout.OfByte = ValueLayout.JAVA_BYTE
     val C_SHORT: ValueLayout.OfShort = ValueLayout.JAVA_SHORT
     val C_INT: ValueLayout.OfInt = ValueLayout.JAVA_INT
     val C_LONG: ValueLayout.OfLong = ValueLayout.JAVA_LONG
