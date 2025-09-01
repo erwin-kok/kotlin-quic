@@ -1,137 +1,122 @@
 package org.erwinkok.quic.common
 
-import io.github.oshai.kotlinlogging.KotlinLogging
-import org.erwinkok.quic.common.Token.MAX_TOKEN_LENGTH
+import kotlinx.io.Source
+import kotlinx.io.readByteArray
 import org.erwinkok.quic.common.quiche.NativeHelper
 import org.erwinkok.quic.common.quiche.Quiche
-import org.erwinkok.quic.common.quiche.QuicheConstants.QUICHE_MAX_CONN_ID_LEN
 import org.erwinkok.quic.common.quiche.QuicheError
 import java.io.IOException
 import java.lang.foreign.Arena
+import java.lang.foreign.MemoryLayout.PathElement.groupElement
+import java.lang.foreign.MemoryLayout.paddingLayout
+import java.lang.foreign.MemoryLayout.sequenceLayout
+import java.lang.foreign.MemoryLayout.structLayout
 import java.lang.foreign.MemorySegment
-import java.nio.ByteBuffer
+import java.lang.foreign.MemorySegment.ofArray
+import java.lang.foreign.ValueLayout.JAVA_BYTE
+import java.lang.foreign.ValueLayout.JAVA_INT
+import java.lang.foreign.ValueLayout.JAVA_LONG
 
-private val logger = KotlinLogging.logger {}
-
-data class QuicHeader(
-    val version: Int,
-    val type: QuicPacketType,
-    val scId: QuicheConnectionId,
-    val dcId: QuicheConnectionId,
-    val tokenBytes: ByteArray,
-) {
-    override fun equals(other: Any?): Boolean {
-        if (other === this) {
-            return true
-        }
-        if (other !is QuicHeader) {
-            return super.equals(other)
-        }
-        if (version != other.version) return false
-        if (type != other.type) return false
-        if (scId != other.scId) return false
-        if (dcId != other.dcId) return false
-        if (!tokenBytes.contentEquals(other.tokenBytes)) return false
-        return true
+class QuicHeader private constructor(
+    private val arena: Arena,
+    private val memorySegment: MemorySegment,
+) : AutoCloseable {
+    val version by lazy {
+        memorySegment.get(JAVA_INT, versionOffset)
+    }
+    val type by lazy {
+        val type = memorySegment.get(JAVA_BYTE, typeOffset).toInt()
+        QuicPacketType.of(type)
+    }
+    val scid by lazy {
+        val scidLength = memorySegment.get(JAVA_LONG, scidLengthOffset).toInt()
+        val scidBytes = ByteArray(scidLength)
+        memorySegment.asSlice(scidOffset, scidLength.toLong()).asByteBuffer().get(scidBytes)
+        QuicheConnectionId(scidBytes)
+    }
+    val dcid by lazy {
+        val dcidLength = memorySegment.get(JAVA_LONG, dcidLengthOffset).toInt()
+        val dcidBytes = ByteArray(dcidLength)
+        memorySegment.asSlice(dcidOffset, dcidLength.toLong()).asByteBuffer().get(dcidBytes)
+        QuicheConnectionId(dcidBytes)
+    }
+    val token by lazy {
+        val tokenLength = memorySegment.get(JAVA_LONG, tokenLengthOffset).toInt()
+        val tokenBytes = ByteArray(tokenLength)
+        memorySegment.asSlice(tokenOffset, tokenLength.toLong()).asByteBuffer().get(tokenBytes)
+        tokenBytes
+    }
+    val versionSegment by lazy {
+        memorySegment.asSlice(versionOffset, JAVA_INT.byteSize())
     }
 
-    override fun hashCode(): Int {
-        var result = version
-        result = 31 * result + type.hashCode()
-        result = 31 * result + scId.hashCode()
-        result = 31 * result + dcId.hashCode()
-        result = 31 * result + tokenBytes.contentHashCode()
-        return result
+    override fun close() {
+        arena.close()
     }
 
     companion object {
-        fun parse(packetRead: ByteBuffer): QuicHeader {
-            val scope = Arena.ofConfined()
-            return try {
-                val type = scope.allocate(NativeHelper.C_BYTE)
-                val version = scope.allocate(NativeHelper.C_INT)
+        const val QUICHE_MAX_CONN_ID_LEN = 20L
+        const val MAX_TOKEN_LENGTH = 48L
 
-                // Source Connection ID
-                val scid = scope.allocate(QUICHE_MAX_CONN_ID_LEN.toLong())
-                val scidLength = scope.allocate(NativeHelper.C_LONG)
-                scidLength.set(NativeHelper.C_LONG, 0L, scid.byteSize())
+        private val OUTPUT_LAYOUT = structLayout(
+            JAVA_INT.withName("version"),
+            JAVA_BYTE.withName("type"),
+            paddingLayout(3),
+            sequenceLayout(QUICHE_MAX_CONN_ID_LEN, JAVA_BYTE).withName("scid"),
+            paddingLayout(4),
+            JAVA_LONG.withName("scid_len"),
+            sequenceLayout(QUICHE_MAX_CONN_ID_LEN, JAVA_BYTE).withName("dcid"),
+            paddingLayout(4),
+            JAVA_LONG.withName("dcid_len"),
+            sequenceLayout(MAX_TOKEN_LENGTH, JAVA_BYTE).withName("token"),
+            JAVA_LONG.withName("token_len"),
+        )
 
-                // Destination Connection ID
-                val dcid = scope.allocate(QUICHE_MAX_CONN_ID_LEN.toLong())
-                val dcidLength = scope.allocate(NativeHelper.C_LONG)
-                dcidLength.set(NativeHelper.C_LONG, 0L, dcid.byteSize())
+        private val versionOffset = OUTPUT_LAYOUT.byteOffset(groupElement("version"))
+        private val typeOffset = OUTPUT_LAYOUT.byteOffset(groupElement("type"))
+        private val scidOffset = OUTPUT_LAYOUT.byteOffset(groupElement("scid"))
+        private val scidLengthOffset = OUTPUT_LAYOUT.byteOffset(groupElement("scid_len"))
+        private val dcidOffset = OUTPUT_LAYOUT.byteOffset(groupElement("dcid"))
+        private val dcidLengthOffset = OUTPUT_LAYOUT.byteOffset(groupElement("dcid_len"))
+        private val tokenOffset = OUTPUT_LAYOUT.byteOffset(groupElement("token"))
+        private val tokenLengthOffset = OUTPUT_LAYOUT.byteOffset(groupElement("token_len"))
 
-                val token = scope.allocate(MAX_TOKEN_LENGTH)
-                val tokenLength = scope.allocate(NativeHelper.C_LONG)
-                tokenLength.set(NativeHelper.C_LONG, 0L, token.byteSize())
+        fun parse(packetData: Source): QuicHeader {
+            val arena = Arena.ofConfined()
+            Arena.ofConfined().use { tempArena ->
+                try {
+                    val byteArray = packetData.readByteArray()
+                    val inputSegment = tempArena.allocate(byteArray.size.toLong())
+                    inputSegment.copyFrom(ofArray(byteArray))
 
-                val rc = if (packetRead.isDirect) {
-                    // If the ByteBuffer is direct, it can be used without any copy.
-                    val packetReadSegment = MemorySegment.ofBuffer(packetRead)
-                    Quiche.quiche_header_info(
-                        packetReadSegment,
-                        packetRead.remaining().toLong(),
-                        QUICHE_MAX_CONN_ID_LEN.toLong(),
-                        version,
-                        type,
-                        scid,
-                        scidLength,
-                        dcid,
-                        dcidLength,
-                        token,
-                        tokenLength,
+                    val outputSegment = arena.allocate(OUTPUT_LAYOUT)
+                    val scidLength = outputSegment.asSlice(scidLengthOffset)
+                    scidLength.set(NativeHelper.C_LONG, 0L, QUICHE_MAX_CONN_ID_LEN)
+                    val dcidLength = outputSegment.asSlice(dcidLengthOffset)
+                    dcidLength.set(NativeHelper.C_LONG, 0L, QUICHE_MAX_CONN_ID_LEN)
+                    val tokenLength = outputSegment.asSlice(tokenLengthOffset)
+                    tokenLength.set(NativeHelper.C_LONG, 0L, MAX_TOKEN_LENGTH)
+                    val rc = Quiche.quiche_header_info(
+                        inputSegment,
+                        inputSegment.byteSize(),
+                        QUICHE_MAX_CONN_ID_LEN,
+                        outputSegment.asSlice(versionOffset, JAVA_INT.byteSize()),
+                        outputSegment.asSlice(typeOffset, JAVA_BYTE.byteSize()),
+                        outputSegment.asSlice(scidOffset),
+                        outputSegment.asSlice(scidLengthOffset, JAVA_LONG.byteSize()),
+                        outputSegment.asSlice(dcidOffset),
+                        outputSegment.asSlice(dcidLengthOffset, JAVA_LONG.byteSize()),
+                        outputSegment.asSlice(tokenOffset),
+                        outputSegment.asSlice(tokenLengthOffset, JAVA_LONG.byteSize()),
                     )
-                } else {
-                    val packetReadSegment = scope.allocate(packetRead.remaining().toLong())
-                    val prevPosition = packetRead.position()
-                    packetReadSegment.asByteBuffer().put(packetRead)
-                    packetRead.position(prevPosition)
-                    Quiche.quiche_header_info(
-                        packetReadSegment,
-                        packetRead.remaining().toLong(),
-                        QUICHE_MAX_CONN_ID_LEN.toLong(),
-                        version,
-                        type,
-                        scid,
-                        scidLength,
-                        dcid,
-                        dcidLength,
-                        token,
-                        tokenLength,
-                    )
+                    if (rc < 0) {
+                        throw IOException("failed to parse header: ${QuicheError.errorString(rc)}")
+                    }
+                    return QuicHeader(arena, outputSegment)
+                } catch (e: Exception) {
+                    arena.close()
+                    throw e
                 }
-                if (rc < 0) {
-                    throw IOException("failed to parse header: ${QuicheError.errorString(rc)}")
-                }
-
-                if (logger.isDebugEnabled()) {
-                    logger.debug { "version: ${version.get(NativeHelper.C_INT, 0L)}" }
-                    logger.debug { "type: ${type.get(NativeHelper.C_BYTE, 0L)}" }
-                    logger.debug { "scid len: ${scidLength.get(NativeHelper.C_LONG, 0L)}" }
-                    logger.debug { "dcid len: ${dcidLength.get(NativeHelper.C_LONG, 0L)}" }
-                    logger.debug { "token len: ${tokenLength.get(NativeHelper.C_LONG, 0L)}" }
-                }
-
-                val quicType = QuicPacketType.of(type.get(NativeHelper.C_BYTE, 0L).toInt())
-
-                val scIdBytes = ByteArray(scidLength.get(NativeHelper.C_LONG, 0L).toInt())
-                scid.asByteBuffer().get(scIdBytes)
-
-                val dcIdBytes = ByteArray(dcidLength.get(NativeHelper.C_LONG, 0L).toInt())
-                dcid.asByteBuffer().get(dcIdBytes)
-
-                val tokenBytes = ByteArray(tokenLength.get(NativeHelper.C_LONG, 0L).toInt())
-                token.asByteBuffer().get(tokenBytes)
-
-                QuicHeader(
-                    version.get(NativeHelper.C_INT, 0L),
-                    quicType,
-                    QuicheConnectionId(scIdBytes),
-                    QuicheConnectionId(dcIdBytes),
-                    tokenBytes,
-                )
-            } finally {
-                scope.close()
             }
         }
     }

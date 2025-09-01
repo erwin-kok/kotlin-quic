@@ -33,7 +33,7 @@ fun main() {
         )
         val scope = CoroutineScope(SupervisorJob() + exceptionHandler + Dispatchers.Default)
         val localInetSocket = InetSocketAddress("localhost", 8484)
-        val connection = QuicheServerConnection.create(scope, localInetSocket, quicConfiguration)
+        val connection = QuicheServerSocket.create(scope, localInetSocket, quicConfiguration)
         connection.close()
         connection.awaitClosed()
     }
