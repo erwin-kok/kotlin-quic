@@ -43,7 +43,7 @@ object Quiche {
         }
 
         // Called from native Quiche library
-        fun log(msg: MemorySegment, argp: MemorySegment?) {
+        fun log(msg: MemorySegment, argp: MemorySegment) {
             logger.debug { "[Quiche] ${msg.getUtf8String(0L)}" }
         }
     }
@@ -60,496 +60,496 @@ object Quiche {
         return DowncallHandles.quiche_config_new.invokeExact(version) as? MemorySegment
     }
 
-    fun quiche_config_load_cert_chain_from_pem_file(config: MemorySegment?, path: MemorySegment?): Int {
+    fun quiche_config_load_cert_chain_from_pem_file(config: MemorySegment, path: MemorySegment): Int {
         return DowncallHandles.quiche_config_load_cert_chain_from_pem_file.invokeExact(config, path) as Int
     }
 
-    fun quiche_config_load_priv_key_from_pem_file(config: MemorySegment?, path: MemorySegment?): Int {
+    fun quiche_config_load_priv_key_from_pem_file(config: MemorySegment, path: MemorySegment): Int {
         return DowncallHandles.quiche_config_load_priv_key_from_pem_file.invokeExact(config, path) as Int
     }
 
-    fun quiche_config_load_verify_locations_from_file(config: MemorySegment?, path: MemorySegment?): Int {
+    fun quiche_config_load_verify_locations_from_file(config: MemorySegment, path: MemorySegment): Int {
         return DowncallHandles.quiche_config_load_verify_locations_from_file.invokeExact(config, path) as Int
     }
 
-    fun quiche_config_load_verify_locations_from_directory(config: MemorySegment?, path: MemorySegment?): Int {
+    fun quiche_config_load_verify_locations_from_directory(config: MemorySegment, path: MemorySegment): Int {
         return DowncallHandles.quiche_config_load_verify_locations_from_directory.invokeExact(config, path) as Int
     }
 
-    fun quiche_config_verify_peer(config: MemorySegment?, v: Boolean) {
+    fun quiche_config_verify_peer(config: MemorySegment, v: Boolean) {
         DowncallHandles.quiche_config_verify_peer.invokeExact(config, (if (v) 1 else 0).toByte())
     }
 
-    fun quiche_config_grease(config: MemorySegment?, v: Boolean) {
+    fun quiche_config_grease(config: MemorySegment, v: Boolean) {
         DowncallHandles.quiche_config_grease.invokeExact(config, (if (v) 1 else 0).toByte())
     }
 
-    fun quiche_config_log_keys(config: MemorySegment?) {
+    fun quiche_config_log_keys(config: MemorySegment) {
         DowncallHandles.quiche_config_log_keys.invokeExact(config)
     }
 
-    fun quiche_config_enable_early_data(config: MemorySegment?) {
+    fun quiche_config_enable_early_data(config: MemorySegment) {
         DowncallHandles.quiche_config_enable_early_data.invokeExact(config)
     }
 
-    fun quiche_config_set_application_protos(config: MemorySegment?, protos: MemorySegment?, protos_len: Long): Int {
+    fun quiche_config_set_application_protos(config: MemorySegment, protos: MemorySegment, protos_len: Long): Int {
         return DowncallHandles.quiche_config_set_application_protos.invokeExact(config, protos, protos_len) as Int
     }
 
-    fun quiche_config_set_max_idle_timeout(config: MemorySegment?, v: Long) {
+    fun quiche_config_set_max_idle_timeout(config: MemorySegment, v: Long) {
         DowncallHandles.quiche_config_set_max_idle_timeout.invokeExact(config, v)
     }
 
-    fun quiche_config_set_max_recv_udp_payload_size(config: MemorySegment?, v: Long) {
+    fun quiche_config_set_max_recv_udp_payload_size(config: MemorySegment, v: Long) {
         DowncallHandles.quiche_config_set_max_recv_udp_payload_size.invokeExact(config, v)
     }
 
-    fun quiche_config_set_max_send_udp_payload_size(config: MemorySegment?, v: Long) {
+    fun quiche_config_set_max_send_udp_payload_size(config: MemorySegment, v: Long) {
         DowncallHandles.quiche_config_set_max_send_udp_payload_size.invokeExact(config, v)
     }
 
-    fun quiche_config_set_initial_max_data(config: MemorySegment?, v: Long) {
+    fun quiche_config_set_initial_max_data(config: MemorySegment, v: Long) {
         DowncallHandles.quiche_config_set_initial_max_data.invokeExact(config, v)
     }
 
-    fun quiche_config_set_initial_max_stream_data_bidi_local(config: MemorySegment?, v: Long) {
+    fun quiche_config_set_initial_max_stream_data_bidi_local(config: MemorySegment, v: Long) {
         DowncallHandles.quiche_config_set_initial_max_stream_data_bidi_local.invokeExact(config, v)
     }
 
-    fun quiche_config_set_initial_max_stream_data_bidi_remote(config: MemorySegment?, v: Long) {
+    fun quiche_config_set_initial_max_stream_data_bidi_remote(config: MemorySegment, v: Long) {
         DowncallHandles.quiche_config_set_initial_max_stream_data_bidi_remote.invokeExact(config, v)
     }
 
-    fun quiche_config_set_initial_max_stream_data_uni(config: MemorySegment?, v: Long) {
+    fun quiche_config_set_initial_max_stream_data_uni(config: MemorySegment, v: Long) {
         DowncallHandles.quiche_config_set_initial_max_stream_data_uni.invokeExact(config, v)
     }
 
-    fun quiche_config_set_initial_max_streams_bidi(config: MemorySegment?, v: Long) {
+    fun quiche_config_set_initial_max_streams_bidi(config: MemorySegment, v: Long) {
         DowncallHandles.quiche_config_set_initial_max_streams_bidi.invokeExact(config, v)
     }
 
-    fun quiche_config_set_initial_max_streams_uni(config: MemorySegment?, v: Long) {
+    fun quiche_config_set_initial_max_streams_uni(config: MemorySegment, v: Long) {
         DowncallHandles.quiche_config_set_initial_max_streams_uni.invokeExact(config, v)
     }
 
-    fun quiche_config_set_ack_delay_exponent(config: MemorySegment?, v: Long) {
+    fun quiche_config_set_ack_delay_exponent(config: MemorySegment, v: Long) {
         DowncallHandles.quiche_config_set_ack_delay_exponent.invokeExact(config, v)
     }
 
-    fun quiche_config_set_max_ack_delay(config: MemorySegment?, v: Long) {
+    fun quiche_config_set_max_ack_delay(config: MemorySegment, v: Long) {
         DowncallHandles.quiche_config_set_max_ack_delay.invokeExact(config, v)
     }
 
-    fun quiche_config_set_disable_active_migration(config: MemorySegment?, v: Boolean) {
+    fun quiche_config_set_disable_active_migration(config: MemorySegment, v: Boolean) {
         DowncallHandles.quiche_config_set_disable_active_migration.invokeExact(config, (if (v) 1 else 0).toByte())
     }
 
-    fun quiche_config_set_cc_algorithm_name(config: MemorySegment?, algo: MemorySegment?): Int {
+    fun quiche_config_set_cc_algorithm_name(config: MemorySegment, algo: MemorySegment): Int {
         return DowncallHandles.quiche_config_set_cc_algorithm_name.invokeExact(config, algo) as Int
     }
 
-    fun quiche_config_set_initial_congestion_window_packets(config: MemorySegment?, packets: Long) {
+    fun quiche_config_set_initial_congestion_window_packets(config: MemorySegment, packets: Long) {
         DowncallHandles.quiche_config_set_initial_congestion_window_packets.invokeExact(config, packets)
     }
 
-    fun quiche_config_set_cc_algorithm(config: MemorySegment?, algo: Int) {
+    fun quiche_config_set_cc_algorithm(config: MemorySegment, algo: Int) {
         DowncallHandles.quiche_config_set_cc_algorithm.invokeExact(config, algo)
     }
 
-    fun quiche_config_enable_hystart(config: MemorySegment?, v: Boolean) {
+    fun quiche_config_enable_hystart(config: MemorySegment, v: Boolean) {
         DowncallHandles.quiche_config_enable_hystart.invokeExact(config, (if (v) 1 else 0).toByte())
     }
 
-    fun quiche_config_enable_pacing(config: MemorySegment?, v: Boolean) {
+    fun quiche_config_enable_pacing(config: MemorySegment, v: Boolean) {
         DowncallHandles.quiche_config_enable_pacing.invokeExact(config, (if (v) 1 else 0).toByte())
     }
 
-    fun quiche_config_set_max_pacing_rate(config: MemorySegment?, v: Long) {
+    fun quiche_config_set_max_pacing_rate(config: MemorySegment, v: Long) {
         DowncallHandles.quiche_config_set_max_pacing_rate.invokeExact(config, v)
     }
 
-    fun quiche_config_enable_dgram(config: MemorySegment?, enabled: Boolean, recv_queue_len: Long, send_queue_len: Long) {
+    fun quiche_config_enable_dgram(config: MemorySegment, enabled: Boolean, recv_queue_len: Long, send_queue_len: Long) {
         DowncallHandles.quiche_config_enable_dgram.invokeExact(config, (if (enabled) 1 else 0).toByte(), recv_queue_len, send_queue_len)
     }
 
-    fun quiche_config_set_max_connection_window(config: MemorySegment?, v: Long) {
+    fun quiche_config_set_max_connection_window(config: MemorySegment, v: Long) {
         DowncallHandles.quiche_config_set_max_connection_window.invokeExact(config, v)
     }
 
-    fun quiche_config_set_max_stream_window(config: MemorySegment?, v: Long) {
+    fun quiche_config_set_max_stream_window(config: MemorySegment, v: Long) {
         DowncallHandles.quiche_config_set_max_stream_window.invokeExact(config, v)
     }
 
-    fun quiche_config_set_active_connection_id_limit(config: MemorySegment?, v: Long) {
+    fun quiche_config_set_active_connection_id_limit(config: MemorySegment, v: Long) {
         DowncallHandles.quiche_config_set_active_connection_id_limit.invokeExact(config, v)
     }
 
-    fun quiche_config_set_stateless_reset_token(config: MemorySegment?, v: MemorySegment?) {
+    fun quiche_config_set_stateless_reset_token(config: MemorySegment, v: MemorySegment) {
         DowncallHandles.quiche_config_set_stateless_reset_token.invokeExact(config, v)
     }
 
-    fun quiche_config_set_disable_dcid_reuse(config: MemorySegment?, v: Boolean) {
+    fun quiche_config_set_disable_dcid_reuse(config: MemorySegment, v: Boolean) {
         DowncallHandles.quiche_config_set_disable_dcid_reuse.invokeExact(config, (if (v) 1 else 0).toByte())
     }
 
-    fun quiche_config_set_ticket_key(config: MemorySegment?, key: MemorySegment?, key_len: Long): Int {
+    fun quiche_config_set_ticket_key(config: MemorySegment, key: MemorySegment, key_len: Long): Int {
         return DowncallHandles.quiche_config_set_ticket_key.invokeExact(config, key, key_len) as Int
     }
 
-    fun quiche_config_free(config: MemorySegment?) {
+    fun quiche_config_free(config: MemorySegment) {
         DowncallHandles.quiche_config_free.invokeExact(config)
     }
 
-    fun quiche_header_info(buf: MemorySegment?, buf_len: Long, dcil: Long, version: MemorySegment?, type: MemorySegment?, scid: MemorySegment?, scid_len: MemorySegment?, dcid: MemorySegment?, dcid_len: MemorySegment?, token: MemorySegment?, token_len: MemorySegment?): Int {
-        return DowncallHandles.quiche_header_info.invokeExact(buf, buf_len, dcil, version, type, scid, scid_len, dcid, dcid_len, token, token_len) as Int
+    fun quiche_header_info(buf: MemorySegment, bufLen: Long, dcil: Long, version: MemorySegment, type: MemorySegment, scid: MemorySegment, scidLen: MemorySegment, dcid: MemorySegment, dcidLen: MemorySegment, token: MemorySegment, token_len: MemorySegment): Int {
+        return DowncallHandles.quiche_header_info.invokeExact(buf, bufLen, dcil, version, type, scid, scidLen, dcid, dcidLen, token, token_len) as Int
     }
 
-    fun quiche_accept(scid: MemorySegment?, scid_len: Long, odcid: MemorySegment?, odcid_len: Long, local: MemorySegment?, local_len: Int, peer: MemorySegment?, peer_len: Int, config: MemorySegment?): MemorySegment? {
-        return DowncallHandles.quiche_accept.invokeExact(scid, scid_len, odcid, odcid_len, local, local_len, peer, peer_len, config) as MemorySegment?
+    fun quiche_accept(scid: MemorySegment, scidLen: Long, odcid: MemorySegment, odcid_len: Long, local: MemorySegment, localLen: Int, peer: MemorySegment, peerLen: Int, config: MemorySegment): MemorySegment? {
+        return DowncallHandles.quiche_accept.invokeExact(scid, scidLen, odcid, odcid_len, local, localLen, peer, peerLen, config) as MemorySegment?
     }
 
-    fun quiche_connect(server_name: MemorySegment?, scid: MemorySegment?, scid_len: Long, local: MemorySegment?, local_len: Int, peer: MemorySegment?, peer_len: Int, config: MemorySegment?): MemorySegment? {
-        return DowncallHandles.quiche_connect.invokeExact(server_name, scid, scid_len, local, local_len, peer, peer_len, config) as MemorySegment?
+    fun quiche_connect(server_name: MemorySegment, scid: MemorySegment, scidLen: Long, local: MemorySegment, localLen: Int, peer: MemorySegment, peerLen: Int, config: MemorySegment): MemorySegment? {
+        return DowncallHandles.quiche_connect.invokeExact(server_name, scid, scidLen, local, localLen, peer, peerLen, config) as MemorySegment?
     }
 
-    fun quiche_negotiate_version(scid: MemorySegment?, scid_len: Long, dcid: MemorySegment?, dcid_len: Long, out: MemorySegment?, out_len: Long): Long {
-        return DowncallHandles.quiche_negotiate_version.invokeExact(scid, scid_len, dcid, dcid_len, out, out_len) as Long
+    fun quiche_negotiate_version(scid: MemorySegment, scidLen: Long, dcid: MemorySegment, dcidLen: Long, out: MemorySegment, outLen: Long): Long {
+        return DowncallHandles.quiche_negotiate_version.invokeExact(scid, scidLen, dcid, dcidLen, out, outLen) as Long
     }
 
-    fun quiche_retry(scid: MemorySegment?, scid_len: Long, dcid: MemorySegment?, dcid_len: Long, new_scid: MemorySegment?, new_scid_len: Long, token: MemorySegment?, token_len: Long, version: Int, out: MemorySegment?, out_len: Long): Long {
-        return DowncallHandles.quiche_retry.invokeExact(scid, scid_len, dcid, dcid_len, new_scid, new_scid_len, token, token_len, version, out, out_len) as Long
+    fun quiche_retry(scid: MemorySegment, scidLen: Long, dcid: MemorySegment, dcidLen: Long, new_scid: MemorySegment, new_scid_len: Long, token: MemorySegment, token_len: Long, version: Int, out: MemorySegment, outLen: Long): Long {
+        return DowncallHandles.quiche_retry.invokeExact(scid, scidLen, dcid, dcidLen, new_scid, new_scid_len, token, token_len, version, out, outLen) as Long
     }
 
     fun quiche_version_is_supported(version: Int): Boolean {
         return (DowncallHandles.quiche_version_is_supported.invokeExact(version) as Byte).toInt() != 0
     }
 
-    fun quiche_conn_new_with_tls(scid: MemorySegment?, scid_len: Long, odcid: MemorySegment?, odcid_len: Long, local: MemorySegment?, local_len: Int, peer: MemorySegment?, peer_len: Int, config: MemorySegment?, ssl: MemorySegment?, is_server: Boolean): MemorySegment? {
-        return DowncallHandles.quiche_conn_new_with_tls.invokeExact(scid, scid_len, odcid, odcid_len, local, local_len, peer, peer_len, config, ssl, (if (is_server) 1 else 0).toByte()) as MemorySegment?
+    fun quiche_conn_new_with_tls(scid: MemorySegment, scidLen: Long, odcid: MemorySegment, odcid_len: Long, local: MemorySegment, localLen: Int, peer: MemorySegment, peerLen: Int, config: MemorySegment, ssl: MemorySegment, is_server: Boolean): MemorySegment? {
+        return DowncallHandles.quiche_conn_new_with_tls.invokeExact(scid, scidLen, odcid, odcid_len, local, localLen, peer, peerLen, config, ssl, (if (is_server) 1 else 0).toByte()) as MemorySegment?
     }
 
-    fun quiche_conn_set_keylog_path(conn: MemorySegment?, path: MemorySegment?): Boolean {
+    fun quiche_conn_set_keylog_path(conn: MemorySegment, path: MemorySegment): Boolean {
         return (DowncallHandles.quiche_conn_set_keylog_path.invokeExact(conn, path) as Byte).toInt() != 0
     }
 
-    fun quiche_conn_set_keylog_fd(conn: MemorySegment?, fd: Int) {
+    fun quiche_conn_set_keylog_fd(conn: MemorySegment, fd: Int) {
         DowncallHandles.quiche_conn_set_keylog_fd.invokeExact(conn, fd)
     }
 
-    fun quiche_conn_set_qlog_path(conn: MemorySegment?, path: MemorySegment?, log_title: MemorySegment?, log_desc: MemorySegment?): Boolean {
+    fun quiche_conn_set_qlog_path(conn: MemorySegment, path: MemorySegment, log_title: MemorySegment, log_desc: MemorySegment): Boolean {
         return (DowncallHandles.quiche_conn_set_qlog_path.invokeExact(conn, path, log_title, log_desc) as Byte).toInt() != 0
     }
 
-    fun quiche_conn_set_qlog_fd(conn: MemorySegment?, fd: Int, log_title: MemorySegment?, log_desc: MemorySegment?) {
+    fun quiche_conn_set_qlog_fd(conn: MemorySegment, fd: Int, log_title: MemorySegment, log_desc: MemorySegment) {
         DowncallHandles.quiche_conn_set_qlog_fd.invokeExact(conn, fd, log_title, log_desc)
     }
 
-    fun quiche_conn_set_session(conn: MemorySegment?, buf: MemorySegment?, buf_len: Long): Int {
-        return DowncallHandles.quiche_conn_set_session.invokeExact(conn, buf, buf_len) as Int
+    fun quiche_conn_set_session(conn: MemorySegment, buf: MemorySegment, bufLen: Long): Int {
+        return DowncallHandles.quiche_conn_set_session.invokeExact(conn, buf, bufLen) as Int
     }
 
-    fun quiche_conn_recv(conn: MemorySegment?, buf: MemorySegment?, buf_len: Long, info: MemorySegment?): Long {
-        return DowncallHandles.quiche_conn_recv.invokeExact(conn, buf, buf_len, info) as Long
+    fun quiche_conn_recv(conn: MemorySegment, buf: MemorySegment, bufLen: Long, info: MemorySegment): Long {
+        return DowncallHandles.quiche_conn_recv.invokeExact(conn, buf, bufLen, info) as Long
     }
 
-    fun quiche_conn_send(conn: MemorySegment?, out: MemorySegment?, out_len: Long, out_info: MemorySegment?): Long {
-        return DowncallHandles.quiche_conn_send.invokeExact(conn, out, out_len, out_info) as Long
+    fun quiche_conn_send(conn: MemorySegment, out: MemorySegment, outLen: Long, out_info: MemorySegment): Long {
+        return DowncallHandles.quiche_conn_send.invokeExact(conn, out, outLen, out_info) as Long
     }
 
-    fun quiche_conn_send_quantum(conn: MemorySegment?): Long {
+    fun quiche_conn_send_quantum(conn: MemorySegment): Long {
         return DowncallHandles.quiche_conn_send_quantum.invokeExact(conn) as Long
     }
 
-    fun quiche_conn_send_on_path(conn: MemorySegment?, out: MemorySegment?, out_len: Long, from: MemorySegment?, from_len: Int, to: MemorySegment?, to_len: Int, out_info: MemorySegment?): Long {
-        return DowncallHandles.quiche_conn_send_on_path.invokeExact(conn, out, out_len, from, from_len, to, to_len, out_info) as Long
+    fun quiche_conn_send_on_path(conn: MemorySegment, out: MemorySegment, outLen: Long, from: MemorySegment, from_len: Int, to: MemorySegment, to_len: Int, out_info: MemorySegment): Long {
+        return DowncallHandles.quiche_conn_send_on_path.invokeExact(conn, out, outLen, from, from_len, to, to_len, out_info) as Long
     }
 
-    fun quiche_conn_send_quantum_on_path(conn: MemorySegment?, local_addr: MemorySegment?, local_len: Int, peer_addr: MemorySegment?, peer_len: Int): Long {
-        return DowncallHandles.quiche_conn_send_quantum_on_path.invokeExact(conn, local_addr, local_len, peer_addr, peer_len) as Long
+    fun quiche_conn_send_quantum_on_path(conn: MemorySegment, local_addr: MemorySegment, localLen: Int, peer_addr: MemorySegment, peerLen: Int): Long {
+        return DowncallHandles.quiche_conn_send_quantum_on_path.invokeExact(conn, local_addr, localLen, peer_addr, peerLen) as Long
     }
 
-    fun quiche_conn_stream_recv(conn: MemorySegment?, stream_id: Long, out: MemorySegment?, buf_len: Long, fin: MemorySegment?, out_error_code: MemorySegment?): Long {
-        return DowncallHandles.quiche_conn_stream_recv.invokeExact(conn, stream_id, out, buf_len, fin, out_error_code) as Long
+    fun quiche_conn_stream_recv(conn: MemorySegment, streamId: Long, out: MemorySegment, bufLen: Long, fin: MemorySegment, out_error_code: MemorySegment): Long {
+        return DowncallHandles.quiche_conn_stream_recv.invokeExact(conn, streamId, out, bufLen, fin, out_error_code) as Long
     }
 
-    fun quiche_conn_stream_send(conn: MemorySegment?, stream_id: Long, buf: MemorySegment?, buf_len: Long, fin: Boolean, out_error_code: MemorySegment?): Long {
-        return DowncallHandles.quiche_conn_stream_send.invokeExact(conn, stream_id, buf, buf_len, (if (fin) 1 else 0).toByte(), out_error_code) as Long
+    fun quiche_conn_stream_send(conn: MemorySegment, streamId: Long, buf: MemorySegment, bufLen: Long, fin: Boolean, out_error_code: MemorySegment): Long {
+        return DowncallHandles.quiche_conn_stream_send.invokeExact(conn, streamId, buf, bufLen, (if (fin) 1 else 0).toByte(), out_error_code) as Long
     }
 
-    fun quiche_conn_stream_priority(conn: MemorySegment?, stream_id: Long, urgency: Byte, incremental: Boolean): Int {
-        return DowncallHandles.quiche_conn_stream_priority.invokeExact(conn, stream_id, urgency, (if (incremental) 1 else 0).toByte()) as Int
+    fun quiche_conn_stream_priority(conn: MemorySegment, streamId: Long, urgency: Byte, incremental: Boolean): Int {
+        return DowncallHandles.quiche_conn_stream_priority.invokeExact(conn, streamId, urgency, (if (incremental) 1 else 0).toByte()) as Int
     }
 
-    fun quiche_conn_stream_shutdown(conn: MemorySegment?, stream_id: Long, direction: Int, err: Long): Int {
-        return DowncallHandles.quiche_conn_stream_shutdown.invokeExact(conn, stream_id, direction, err) as Int
+    fun quiche_conn_stream_shutdown(conn: MemorySegment, streamId: Long, direction: Int, err: Long): Int {
+        return DowncallHandles.quiche_conn_stream_shutdown.invokeExact(conn, streamId, direction, err) as Int
     }
 
-    fun quiche_conn_stream_capacity(conn: MemorySegment?, stream_id: Long): Long {
-        return DowncallHandles.quiche_conn_stream_capacity.invokeExact(conn, stream_id) as Long
+    fun quiche_conn_stream_capacity(conn: MemorySegment, streamId: Long): Long {
+        return DowncallHandles.quiche_conn_stream_capacity.invokeExact(conn, streamId) as Long
     }
 
-    fun quiche_conn_stream_readable(conn: MemorySegment?, stream_id: Long): Boolean {
-        return (DowncallHandles.quiche_conn_stream_readable.invokeExact(conn, stream_id) as Byte).toInt() != 0
+    fun quiche_conn_stream_readable(conn: MemorySegment, streamId: Long): Boolean {
+        return (DowncallHandles.quiche_conn_stream_readable.invokeExact(conn, streamId) as Byte).toInt() != 0
     }
 
-    fun quiche_conn_stream_readable_next(conn: MemorySegment?): Long {
+    fun quiche_conn_stream_readable_next(conn: MemorySegment): Long {
         return DowncallHandles.quiche_conn_stream_readable_next.invokeExact(conn) as Long
     }
 
-    fun quiche_conn_stream_writable(conn: MemorySegment?, stream_id: Long, len: Long): Int {
-        return DowncallHandles.quiche_conn_stream_writable.invokeExact(conn, stream_id, len) as Int
+    fun quiche_conn_stream_writable(conn: MemorySegment, streamId: Long, len: Long): Int {
+        return DowncallHandles.quiche_conn_stream_writable.invokeExact(conn, streamId, len) as Int
     }
 
-    fun quiche_conn_stream_writable_next(conn: MemorySegment?): Long {
+    fun quiche_conn_stream_writable_next(conn: MemorySegment): Long {
         return DowncallHandles.quiche_conn_stream_writable_next.invokeExact(conn) as Long
     }
 
-    fun quiche_conn_stream_finished(conn: MemorySegment?, stream_id: Long): Boolean {
-        return (DowncallHandles.quiche_conn_stream_finished.invokeExact(conn, stream_id) as Byte).toInt() != 0
+    fun quiche_conn_stream_finished(conn: MemorySegment, streamId: Long): Boolean {
+        return (DowncallHandles.quiche_conn_stream_finished.invokeExact(conn, streamId) as Byte).toInt() != 0
     }
 
-    fun quiche_conn_readable(conn: MemorySegment?): MemorySegment? {
-        return DowncallHandles.quiche_conn_readable.invokeExact(conn) as MemorySegment?
+    fun quiche_conn_readable(conn: MemorySegment): MemorySegment {
+        return DowncallHandles.quiche_conn_readable.invokeExact(conn) as MemorySegment
     }
 
-    fun quiche_conn_writable(conn: MemorySegment?): MemorySegment? {
-        return DowncallHandles.quiche_conn_writable.invokeExact(conn) as MemorySegment?
+    fun quiche_conn_writable(conn: MemorySegment): MemorySegment {
+        return DowncallHandles.quiche_conn_writable.invokeExact(conn) as MemorySegment
     }
 
-    fun quiche_conn_max_send_udp_payload_size(conn: MemorySegment?): Long {
+    fun quiche_conn_max_send_udp_payload_size(conn: MemorySegment): Long {
         return DowncallHandles.quiche_conn_max_send_udp_payload_size.invokeExact(conn) as Long
     }
 
-    fun quiche_conn_timeout_as_nanos(conn: MemorySegment?): Long {
+    fun quiche_conn_timeout_as_nanos(conn: MemorySegment): Long {
         return DowncallHandles.quiche_conn_timeout_as_nanos.invokeExact(conn) as Long
     }
 
-    fun quiche_conn_timeout_as_millis(conn: MemorySegment?): Long {
+    fun quiche_conn_timeout_as_millis(conn: MemorySegment): Long {
         return DowncallHandles.quiche_conn_timeout_as_millis.invokeExact(conn) as Long
     }
 
-    fun quiche_conn_on_timeout(conn: MemorySegment?) {
+    fun quiche_conn_on_timeout(conn: MemorySegment) {
         DowncallHandles.quiche_conn_on_timeout.invokeExact(conn)
     }
 
-    fun quiche_conn_close(conn: MemorySegment?, app: Boolean, err: Long, reason: MemorySegment?, reason_len: Long): Int {
+    fun quiche_conn_close(conn: MemorySegment, app: Boolean, err: Long, reason: MemorySegment, reason_len: Long): Int {
         return DowncallHandles.quiche_conn_close.invokeExact(conn, (if (app) 1 else 0).toByte(), err, reason, reason_len) as Int
     }
 
-    fun quiche_conn_trace_id(conn: MemorySegment?, out: MemorySegment?, out_len: MemorySegment?) {
-        DowncallHandles.quiche_conn_trace_id.invokeExact(conn, out, out_len)
+    fun quiche_conn_trace_id(conn: MemorySegment, out: MemorySegment, outLen: MemorySegment) {
+        DowncallHandles.quiche_conn_trace_id.invokeExact(conn, out, outLen)
     }
 
-    fun quiche_conn_source_id(conn: MemorySegment?, out: MemorySegment?, out_len: MemorySegment?) {
-        DowncallHandles.quiche_conn_source_id.invokeExact(conn, out, out_len)
+    fun quiche_conn_source_id(conn: MemorySegment, out: MemorySegment, outLen: MemorySegment) {
+        DowncallHandles.quiche_conn_source_id.invokeExact(conn, out, outLen)
     }
 
-    fun quiche_conn_source_ids(conn: MemorySegment?): MemorySegment? {
+    fun quiche_conn_source_ids(conn: MemorySegment): MemorySegment? {
         return DowncallHandles.quiche_conn_source_ids.invokeExact(conn) as MemorySegment?
     }
 
-    fun quiche_connection_id_iter_next(iter: MemorySegment?, out: MemorySegment?, out_len: MemorySegment?): Boolean {
-        return (DowncallHandles.quiche_connection_id_iter_next.invokeExact(iter, out, out_len) as Byte).toInt() != 0
+    fun quiche_connection_id_iter_next(iter: MemorySegment, out: MemorySegment, outLen: MemorySegment): Boolean {
+        return (DowncallHandles.quiche_connection_id_iter_next.invokeExact(iter, out, outLen) as Byte).toInt() != 0
     }
 
-    fun quiche_connection_id_iter_free(iter: MemorySegment?) {
+    fun quiche_connection_id_iter_free(iter: MemorySegment) {
         DowncallHandles.quiche_connection_id_iter_free.invokeExact(iter)
     }
 
-    fun quiche_conn_destination_id(conn: MemorySegment?, out: MemorySegment?, out_len: MemorySegment?) {
-        DowncallHandles.quiche_conn_destination_id.invokeExact(conn, out, out_len)
+    fun quiche_conn_destination_id(conn: MemorySegment, out: MemorySegment, outLen: MemorySegment) {
+        DowncallHandles.quiche_conn_destination_id.invokeExact(conn, out, outLen)
     }
 
-    fun quiche_conn_application_proto(conn: MemorySegment?, out: MemorySegment?, out_len: MemorySegment?) {
-        DowncallHandles.quiche_conn_application_proto.invokeExact(conn, out, out_len)
+    fun quiche_conn_application_proto(conn: MemorySegment, out: MemorySegment, outLen: MemorySegment) {
+        DowncallHandles.quiche_conn_application_proto.invokeExact(conn, out, outLen)
     }
 
-    fun quiche_conn_peer_cert(conn: MemorySegment?, out: MemorySegment?, out_len: MemorySegment?) {
-        DowncallHandles.quiche_conn_peer_cert.invokeExact(conn, out, out_len)
+    fun quiche_conn_peer_cert(conn: MemorySegment, out: MemorySegment, outLen: MemorySegment) {
+        DowncallHandles.quiche_conn_peer_cert.invokeExact(conn, out, outLen)
     }
 
-    fun quiche_conn_session(conn: MemorySegment?, out: MemorySegment?, out_len: MemorySegment?) {
-        DowncallHandles.quiche_conn_session.invokeExact(conn, out, out_len)
+    fun quiche_conn_session(conn: MemorySegment, out: MemorySegment, outLen: MemorySegment) {
+        DowncallHandles.quiche_conn_session.invokeExact(conn, out, outLen)
     }
 
-    fun quiche_conn_is_established(conn: MemorySegment?): Boolean {
+    fun quiche_conn_is_established(conn: MemorySegment): Boolean {
         return (DowncallHandles.quiche_conn_is_established.invokeExact(conn) as Byte).toInt() != 0
     }
 
-    fun quiche_conn_is_resumed(conn: MemorySegment?): Boolean {
+    fun quiche_conn_is_resumed(conn: MemorySegment): Boolean {
         return (DowncallHandles.quiche_conn_is_resumed.invokeExact(conn) as Byte).toInt() != 0
     }
 
-    fun quiche_conn_is_in_early_data(conn: MemorySegment?): Boolean {
+    fun quiche_conn_is_in_early_data(conn: MemorySegment): Boolean {
         return (DowncallHandles.quiche_conn_is_in_early_data.invokeExact(conn) as Byte).toInt() != 0
     }
 
-    fun quiche_conn_is_readable(conn: MemorySegment?): Boolean {
+    fun quiche_conn_is_readable(conn: MemorySegment): Boolean {
         return (DowncallHandles.quiche_conn_is_readable.invokeExact(conn) as Byte).toInt() != 0
     }
 
-    fun quiche_conn_is_draining(conn: MemorySegment?): Boolean {
+    fun quiche_conn_is_draining(conn: MemorySegment): Boolean {
         return (DowncallHandles.quiche_conn_is_draining.invokeExact(conn) as Byte).toInt() != 0
     }
 
-    fun quiche_conn_peer_streams_left_bidi(conn: MemorySegment?): Long {
+    fun quiche_conn_peer_streams_left_bidi(conn: MemorySegment): Long {
         return DowncallHandles.quiche_conn_peer_streams_left_bidi.invokeExact(conn) as Long
     }
 
-    fun quiche_conn_peer_streams_left_uni(conn: MemorySegment?): Long {
+    fun quiche_conn_peer_streams_left_uni(conn: MemorySegment): Long {
         return DowncallHandles.quiche_conn_peer_streams_left_uni.invokeExact(conn) as Long
     }
 
-    fun quiche_conn_is_closed(conn: MemorySegment?): Boolean {
+    fun quiche_conn_is_closed(conn: MemorySegment): Boolean {
         return (DowncallHandles.quiche_conn_is_closed.invokeExact(conn) as Byte).toInt() != 0
     }
 
-    fun quiche_conn_is_timed_out(conn: MemorySegment?): Boolean {
+    fun quiche_conn_is_timed_out(conn: MemorySegment): Boolean {
         return (DowncallHandles.quiche_conn_is_timed_out.invokeExact(conn) as Byte).toInt() != 0
     }
 
-    fun quiche_conn_peer_error(conn: MemorySegment?, is_app: MemorySegment?, error_code: MemorySegment?, reason: MemorySegment?, reason_len: MemorySegment?): Boolean {
+    fun quiche_conn_peer_error(conn: MemorySegment, is_app: MemorySegment, error_code: MemorySegment, reason: MemorySegment, reason_len: MemorySegment): Boolean {
         return (DowncallHandles.quiche_conn_peer_error.invokeExact(conn, is_app, error_code, reason, reason_len) as Byte).toInt() != 0
     }
 
-    fun quiche_conn_local_error(conn: MemorySegment?, is_app: MemorySegment?, error_code: MemorySegment?, reason: MemorySegment?, reason_len: MemorySegment?): Boolean {
+    fun quiche_conn_local_error(conn: MemorySegment, is_app: MemorySegment, error_code: MemorySegment, reason: MemorySegment, reason_len: MemorySegment): Boolean {
         return (DowncallHandles.quiche_conn_local_error.invokeExact(conn, is_app, error_code, reason, reason_len) as Byte).toInt() != 0
     }
 
-    fun quiche_stream_iter_next(iter: MemorySegment?, stream_id: MemorySegment?): Boolean {
-        return (DowncallHandles.quiche_stream_iter_next.invokeExact(iter, stream_id) as Byte).toInt() != 0
+    fun quiche_stream_iter_next(iter: MemorySegment, streamId: MemorySegment): Boolean {
+        return (DowncallHandles.quiche_stream_iter_next.invokeExact(iter, streamId) as Byte).toInt() != 0
     }
 
-    fun quiche_stream_iter_free(iter: MemorySegment?) {
+    fun quiche_stream_iter_free(iter: MemorySegment) {
         DowncallHandles.quiche_stream_iter_free.invokeExact(iter)
     }
 
-    fun quiche_conn_stats(conn: MemorySegment?, out: MemorySegment?) {
+    fun quiche_conn_stats(conn: MemorySegment, out: MemorySegment) {
         DowncallHandles.quiche_conn_stats.invokeExact(conn, out)
     }
 
-    fun quiche_conn_peer_transport_params(conn: MemorySegment?, out: MemorySegment?): Boolean {
+    fun quiche_conn_peer_transport_params(conn: MemorySegment, out: MemorySegment): Boolean {
         return (DowncallHandles.quiche_conn_peer_transport_params.invokeExact(conn, out) as Byte).toInt() != 0
     }
 
-    fun quiche_conn_path_stats(conn: MemorySegment?, idx: Long, out: MemorySegment?): Int {
+    fun quiche_conn_path_stats(conn: MemorySegment, idx: Long, out: MemorySegment): Int {
         return DowncallHandles.quiche_conn_path_stats.invokeExact(conn, idx, out) as Int
     }
 
-    fun quiche_conn_is_server(conn: MemorySegment?): Boolean {
+    fun quiche_conn_is_server(conn: MemorySegment): Boolean {
         return (DowncallHandles.quiche_conn_is_server.invokeExact(conn) as Byte).toInt() != 0
     }
 
-    fun quiche_conn_send_ack_eliciting(conn: MemorySegment?): Long {
+    fun quiche_conn_send_ack_eliciting(conn: MemorySegment): Long {
         return DowncallHandles.quiche_conn_send_ack_eliciting.invokeExact(conn) as Long
     }
 
-    fun quiche_conn_send_ack_eliciting_on_path(conn: MemorySegment?, local: MemorySegment?, local_len: Int, peer: MemorySegment?, peer_len: Int): Long {
-        return DowncallHandles.quiche_conn_send_ack_eliciting_on_path.invokeExact(conn, local, local_len, peer, peer_len) as Long
+    fun quiche_conn_send_ack_eliciting_on_path(conn: MemorySegment, local: MemorySegment, localLen: Int, peer: MemorySegment, peerLen: Int): Long {
+        return DowncallHandles.quiche_conn_send_ack_eliciting_on_path.invokeExact(conn, local, localLen, peer, peerLen) as Long
     }
 
-    fun quiche_conn_retired_scid_next(conn: MemorySegment?, out: MemorySegment?, out_len: MemorySegment?): Boolean {
-        return (DowncallHandles.quiche_conn_retired_scid_next.invokeExact(conn, out, out_len) as Byte).toInt() != 0
+    fun quiche_conn_retired_scid_next(conn: MemorySegment, out: MemorySegment, outLen: MemorySegment): Boolean {
+        return (DowncallHandles.quiche_conn_retired_scid_next.invokeExact(conn, out, outLen) as Byte).toInt() != 0
     }
 
-    fun quiche_conn_retired_scids(conn: MemorySegment?): Long {
+    fun quiche_conn_retired_scids(conn: MemorySegment): Long {
         return DowncallHandles.quiche_conn_retired_scids.invokeExact(conn) as Long
     }
 
-    fun quiche_conn_available_dcids(conn: MemorySegment?): Long {
+    fun quiche_conn_available_dcids(conn: MemorySegment): Long {
         return DowncallHandles.quiche_conn_available_dcids.invokeExact(conn) as Long
     }
 
-    fun quiche_conn_scids_left(conn: MemorySegment?): Long {
+    fun quiche_conn_scids_left(conn: MemorySegment): Long {
         return DowncallHandles.quiche_conn_scids_left.invokeExact(conn) as Long
     }
 
-    fun quiche_conn_active_scids(conn: MemorySegment?): Long {
+    fun quiche_conn_active_scids(conn: MemorySegment): Long {
         return DowncallHandles.quiche_conn_active_scids.invokeExact(conn) as Long
     }
 
-    fun quiche_conn_new_scid(conn: MemorySegment?, scid: MemorySegment?, scid_len: Long, reset_token: MemorySegment?, retire_if_needed: Boolean, scid_seq: MemorySegment?): Int {
-        return DowncallHandles.quiche_conn_new_scid.invokeExact(conn, scid, scid_len, reset_token, (if (retire_if_needed) 1 else 0).toByte(), scid_seq) as Int
+    fun quiche_conn_new_scid(conn: MemorySegment, scid: MemorySegment, scidLen: Long, reset_token: MemorySegment, retire_if_needed: Boolean, scid_seq: MemorySegment): Int {
+        return DowncallHandles.quiche_conn_new_scid.invokeExact(conn, scid, scidLen, reset_token, (if (retire_if_needed) 1 else 0).toByte(), scid_seq) as Int
     }
 
-    fun quiche_conn_probe_path(conn: MemorySegment?, local: MemorySegment?, local_len: Int, peer: MemorySegment?, peer_len: Int, seq: MemorySegment?): Int {
-        return DowncallHandles.quiche_conn_probe_path.invokeExact(conn, local, local_len, peer, peer_len, seq) as Int
+    fun quiche_conn_probe_path(conn: MemorySegment, local: MemorySegment, localLen: Int, peer: MemorySegment, peerLen: Int, seq: MemorySegment): Int {
+        return DowncallHandles.quiche_conn_probe_path.invokeExact(conn, local, localLen, peer, peerLen, seq) as Int
     }
 
-    fun quiche_conn_migrate_source(conn: MemorySegment?, local: MemorySegment?, local_len: Int, seq: MemorySegment?): Int {
-        return DowncallHandles.quiche_conn_migrate_source.invokeExact(conn, local, local_len, seq) as Int
+    fun quiche_conn_migrate_source(conn: MemorySegment, local: MemorySegment, localLen: Int, seq: MemorySegment): Int {
+        return DowncallHandles.quiche_conn_migrate_source.invokeExact(conn, local, localLen, seq) as Int
     }
 
-    fun quiche_conn_migrate(conn: MemorySegment?, local: MemorySegment?, local_len: Int, peer: MemorySegment?, peer_len: Int, seq: MemorySegment?): Int {
-        return DowncallHandles.quiche_conn_migrate.invokeExact(conn, local, local_len, peer, peer_len, seq) as Int
+    fun quiche_conn_migrate(conn: MemorySegment, local: MemorySegment, localLen: Int, peer: MemorySegment, peerLen: Int, seq: MemorySegment): Int {
+        return DowncallHandles.quiche_conn_migrate.invokeExact(conn, local, localLen, peer, peerLen, seq) as Int
     }
 
-    fun quiche_conn_path_event_next(conn: MemorySegment?): MemorySegment? {
+    fun quiche_conn_path_event_next(conn: MemorySegment): MemorySegment? {
         return DowncallHandles.quiche_conn_path_event_next.invokeExact(conn) as MemorySegment?
     }
 
-    fun quiche_path_event_type(ev: MemorySegment?): Int {
+    fun quiche_path_event_type(ev: MemorySegment): Int {
         return DowncallHandles.quiche_path_event_type.invokeExact(ev) as Int
     }
 
-    fun quiche_path_event_new(ev: MemorySegment?, local: MemorySegment?, local_len: MemorySegment?, peer: MemorySegment?, peer_len: MemorySegment?) {
-        DowncallHandles.quiche_path_event_new.invokeExact(ev, local, local_len, peer, peer_len)
+    fun quiche_path_event_new(ev: MemorySegment, local: MemorySegment, localLen: MemorySegment, peer: MemorySegment, peerLen: MemorySegment) {
+        DowncallHandles.quiche_path_event_new.invokeExact(ev, local, localLen, peer, peerLen)
     }
 
-    fun quiche_path_event_validated(ev: MemorySegment?, local: MemorySegment?, local_len: MemorySegment?, peer: MemorySegment?, peer_len: MemorySegment?) {
-        DowncallHandles.quiche_path_event_validated.invokeExact(ev, local, local_len, peer, peer_len)
+    fun quiche_path_event_validated(ev: MemorySegment, local: MemorySegment, localLen: MemorySegment, peer: MemorySegment, peerLen: MemorySegment) {
+        DowncallHandles.quiche_path_event_validated.invokeExact(ev, local, localLen, peer, peerLen)
     }
 
-    fun quiche_path_event_failed_validation(ev: MemorySegment?, local: MemorySegment?, local_len: MemorySegment?, peer: MemorySegment?, peer_len: MemorySegment?) {
-        DowncallHandles.quiche_path_event_failed_validation.invokeExact(ev, local, local_len, peer, peer_len)
+    fun quiche_path_event_failed_validation(ev: MemorySegment, local: MemorySegment, localLen: MemorySegment, peer: MemorySegment, peerLen: MemorySegment) {
+        DowncallHandles.quiche_path_event_failed_validation.invokeExact(ev, local, localLen, peer, peerLen)
     }
 
-    fun quiche_path_event_closed(ev: MemorySegment?, local: MemorySegment?, local_len: MemorySegment?, peer: MemorySegment?, peer_len: MemorySegment?) {
-        DowncallHandles.quiche_path_event_closed.invokeExact(ev, local, local_len, peer, peer_len)
+    fun quiche_path_event_closed(ev: MemorySegment, local: MemorySegment, localLen: MemorySegment, peer: MemorySegment, peerLen: MemorySegment) {
+        DowncallHandles.quiche_path_event_closed.invokeExact(ev, local, localLen, peer, peerLen)
     }
 
-    fun quiche_path_event_reused_source_connection_id(ev: MemorySegment?, id: MemorySegment?, old_local: MemorySegment?, old_local_len: MemorySegment?, old_peer: MemorySegment?, old_peer_len: MemorySegment?, local: MemorySegment?, local_len: MemorySegment?, peer: MemorySegment?, peer_len: MemorySegment?) {
-        DowncallHandles.quiche_path_event_reused_source_connection_id.invokeExact(ev, id, old_local, old_local_len, old_peer, old_peer_len, local, local_len, peer, peer_len)
+    fun quiche_path_event_reused_source_connection_id(ev: MemorySegment, id: MemorySegment, old_local: MemorySegment, old_local_len: MemorySegment, old_peer: MemorySegment, old_peer_len: MemorySegment, local: MemorySegment, localLen: MemorySegment, peer: MemorySegment, peerLen: MemorySegment) {
+        DowncallHandles.quiche_path_event_reused_source_connection_id.invokeExact(ev, id, old_local, old_local_len, old_peer, old_peer_len, local, localLen, peer, peerLen)
     }
 
-    fun quiche_path_event_peer_migrated(ev: MemorySegment?, local: MemorySegment?, local_len: MemorySegment?, peer: MemorySegment?, peer_len: MemorySegment?) {
-        DowncallHandles.quiche_path_event_peer_migrated.invokeExact(ev, local, local_len, peer, peer_len)
+    fun quiche_path_event_peer_migrated(ev: MemorySegment, local: MemorySegment, localLen: MemorySegment, peer: MemorySegment, peerLen: MemorySegment) {
+        DowncallHandles.quiche_path_event_peer_migrated.invokeExact(ev, local, localLen, peer, peerLen)
     }
 
-    fun quiche_path_event_free(ev: MemorySegment?) {
+    fun quiche_path_event_free(ev: MemorySegment) {
         DowncallHandles.quiche_path_event_free.invokeExact(ev)
     }
 
-    fun quiche_conn_retire_dcid(conn: MemorySegment?, dcid_seq: Long): Int {
+    fun quiche_conn_retire_dcid(conn: MemorySegment, dcid_seq: Long): Int {
         return DowncallHandles.quiche_conn_retire_dcid.invokeExact(conn, dcid_seq) as Int
     }
 
-    fun quiche_conn_paths_iter(conn: MemorySegment?, from: MemorySegment?, from_len: Long): MemorySegment? {
+    fun quiche_conn_paths_iter(conn: MemorySegment, from: MemorySegment, from_len: Long): MemorySegment? {
         return DowncallHandles.quiche_conn_paths_iter.invokeExact(conn, from, from_len) as MemorySegment?
     }
 
-    fun quiche_socket_addr_iter_next(iter: MemorySegment?, peer: MemorySegment?, peer_len: MemorySegment?): Boolean {
-        return (DowncallHandles.quiche_socket_addr_iter_next.invokeExact(iter, peer, peer_len) as Byte).toInt() != 0
+    fun quiche_socket_addr_iter_next(iter: MemorySegment, peer: MemorySegment, peerLen: MemorySegment): Boolean {
+        return (DowncallHandles.quiche_socket_addr_iter_next.invokeExact(iter, peer, peerLen) as Byte).toInt() != 0
     }
 
-    fun quiche_socket_addr_iter_free(iter: MemorySegment?) {
+    fun quiche_socket_addr_iter_free(iter: MemorySegment) {
         DowncallHandles.quiche_socket_addr_iter_free.invokeExact(iter)
     }
 
-    fun quiche_conn_is_path_validated(conn: MemorySegment?, from: MemorySegment?, from_len: Long, to: MemorySegment?, to_len: Long): Int {
+    fun quiche_conn_is_path_validated(conn: MemorySegment, from: MemorySegment, from_len: Long, to: MemorySegment, to_len: Long): Int {
         return DowncallHandles.quiche_conn_is_path_validated.invokeExact(conn, from, from_len, to, to_len) as Int
     }
 
-    fun quiche_conn_free(conn: MemorySegment?) {
+    fun quiche_conn_free(conn: MemorySegment) {
         DowncallHandles.quiche_conn_free.invokeExact(conn)
     }
 
-    fun quiche_put_varint(buf: MemorySegment?, buf_len: Long, `val`: Long): Int {
-        return DowncallHandles.quiche_put_varint.invokeExact(buf, buf_len, `val`) as Int
+    fun quiche_put_varint(buf: MemorySegment, bufLen: Long, `val`: Long): Int {
+        return DowncallHandles.quiche_put_varint.invokeExact(buf, bufLen, `val`) as Int
     }
 
-    fun quiche_get_varint(buf: MemorySegment?, buf_len: Long, `val`: MemorySegment?): Long {
-        return DowncallHandles.quiche_get_varint.invokeExact(buf, buf_len, `val`) as Long
+    fun quiche_get_varint(buf: MemorySegment, bufLen: Long, `val`: MemorySegment): Long {
+        return DowncallHandles.quiche_get_varint.invokeExact(buf, bufLen, `val`) as Long
     }
 
     private object DowncallHandles {
