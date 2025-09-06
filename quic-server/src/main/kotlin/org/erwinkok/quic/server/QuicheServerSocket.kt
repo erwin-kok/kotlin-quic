@@ -7,7 +7,6 @@ import io.ktor.network.sockets.Datagram
 import io.ktor.network.sockets.InetSocketAddress
 import io.ktor.network.sockets.aSocket
 import io.ktor.network.sockets.toJavaAddress
-import io.ktor.utils.io.core.buildPacket
 import io.ktor.utils.io.core.remaining
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -15,16 +14,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.io.readByteArray
 import org.erwinkok.quic.common.AwaitableClosable
+import org.erwinkok.quic.common.BinaryDataHolder
 import org.erwinkok.quic.common.QuicConfiguration
-import org.erwinkok.quic.common.QuicHeaderOld
 import org.erwinkok.quic.common.QuicHeader
-import org.erwinkok.quic.common.QuicheConnectionId
 import org.erwinkok.quic.common.QuicheConstants.QUICHE_MAX_CONN_ID_LEN
 import org.erwinkok.quic.common.QuicheConstants.QUICHE_PROTOCOL_VERSION
 import org.erwinkok.quic.common.quiche.Quiche
-import org.erwinkok.quic.common.quiche.QuicheRecvInfo
 import org.erwinkok.quic.common.quiche.convert
 import org.erwinkok.quic.common.toMemorySegment
 import org.erwinkok.quic.common.toPacket
@@ -32,7 +28,6 @@ import java.io.IOException
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.SegmentAllocator
-import java.lang.foreign.ValueLayout.JAVA_LONG
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.ConcurrentHashMap
@@ -47,7 +42,7 @@ class QuicheServerSocket(
     private val socket: BoundDatagramSocket,
 ) : AwaitableClosable {
     private val context = Job(scope.coroutineContext[Job])
-    private val connections = ConcurrentHashMap<QuicheConnectionId, QuicheServerConnection>()
+    private val connections = ConcurrentHashMap<BinaryDataHolder, QuicheServerConnection>()
     private val receiveChannel = socket.incoming
     private val sendChannel = socket.outgoing
 
@@ -72,53 +67,17 @@ class QuicheServerSocket(
 
                 logger.debug { "message received from $remoteAddress (${datagram.packet.remaining} bytes)" }
 
-                Arena.ofShared().use { arena ->
-                    val byteArray = datagram.packet.readByteArray()
-                    val inputSegment = arena.allocate(byteArray.size.toLong())
-                    inputSegment.copyFrom(MemorySegment.ofArray(byteArray))
-                    val quicHeader = QuicHeaderOld.parse(inputSegment)
-                    logger.debug { "quic header: $quicHeader" }
+                val inputSource = datagram.packet
+                val quicHeader = QuicHeader.parse(inputSource)
+                logger.debug { "quic header: $quicHeader" }
 
-                    val qh = QuicHeader.parse(
-                        buildPacket {
-                            write(byteArray)
-                        },
-                    )
-
-                    val s = qh.token.bytes?.size ?: 0
-                    if (s > 0) {
-                        println()
-                    }
-
-                    val connectionId = quicHeader.dcid
-                    var connection = connections[connectionId]
-                    if (connection == null) {
-                        connection = negotiate(remoteAddress, quicHeader)
-                    }
-                    if (connection != null) {
-                        val remaining = inputSegment.asSlice(quicHeader.size)
-                        val recvInfo = QuicheRecvInfo.allocate(arena)
-                        val local = inetLocalAddress.toJavaAddress()
-                        val peer = remoteAddress.toJavaAddress()
-                        QuicheRecvInfo.setSocketAddress(recvInfo, local, peer, arena)
-                        val received = Quiche.quiche_conn_recv(
-                            connection.quicheConnection,
-                            remaining,
-                            remaining.byteSize(),
-                            recvInfo,
-                        )
-                        if (received < 0) {
-                            logger.error { "failed to process packet: $received" }
-                        } else if (Quiche.quiche_conn_is_established(connection.quicheConnection)) {
-                            val quiche_stream_iter = Quiche.quiche_conn_readable(connection.quicheConnection)
-                            val streamIdSegment = arena.allocate(JAVA_LONG)
-                            while (Quiche.quiche_stream_iter_next(quiche_stream_iter, streamIdSegment)) {
-                                val streamId = streamIdSegment.get(JAVA_LONG, 0L)
-                                logger.info { "stream $streamId is readable" }
-
-                            }
-                        }
-                    }
+                val connectionId = quicHeader.dcid
+                var connection = connections[connectionId]
+                if (connection == null) {
+                    connection = negotiate(remoteAddress, quicHeader)
+                }
+                if (connection != null) {
+                    connection.feedCypherBytes(inputSource, inetLocalAddress, remoteAddress)
                 }
             }
         }.invokeOnCompletion {
@@ -130,27 +89,28 @@ class QuicheServerSocket(
         context.complete()
     }
 
-    private suspend fun negotiate(remoteAddress: InetSocketAddress, quicHeader: QuicHeaderOld): QuicheServerConnection? {
+    private suspend fun negotiate(remoteAddress: InetSocketAddress, quicHeader: QuicHeader): QuicheServerConnection? {
         if (!Quiche.quiche_version_is_supported(quicHeader.version)) {
             logger.debug { "version negotiation" }
             versionNegotiation(remoteAddress, quicHeader)
             return null
         }
-        if (quicHeader.tokenLength == 0) {
+        val tokenBytes = quicHeader.token.bytes
+        if (tokenBytes.isEmpty()) {
             logger.debug { "stateless retry" }
             statelessRetry(quicHeader, remoteAddress)
             return null
         }
-        val odcid = validateToken(quicHeader.token, remoteAddress)
+        val odcid = validateToken(tokenBytes, remoteAddress)
         if (odcid == null) {
             logger.error { "invalid address validation token" }
             return null
         }
-        return createConnection(quicHeader.dcid.connectionId, odcid, inetLocalAddress, remoteAddress)
+        return createConnection(quicHeader.dcid, odcid, inetLocalAddress, remoteAddress)
     }
 
     private fun createConnection(
-        scidBytes: ByteArray,
+        scid: BinaryDataHolder,
         odcidBytes: ByteArray,
         localAddress: InetSocketAddress,
         remoteAddress: InetSocketAddress,
@@ -158,21 +118,20 @@ class QuicheServerSocket(
         val arena = Arena.ofConfined()
         try {
             Arena.ofShared().use { tempArena ->
-                if (scidBytes.size != QUICHE_MAX_CONN_ID_LEN.toInt()) {
+                if (scid.size != QUICHE_MAX_CONN_ID_LEN.toInt()) {
                     logger.error { "failed, scid length too short" }
                     arena.close()
                     return null
                 }
-                val scidSegment = scidBytes.toMemorySegment(arena)
-                val odcidSegment = odcidBytes.toMemorySegment(tempArena)
+                val odcid = BinaryDataHolder.of(odcidBytes, tempArena)
                 val localAddressSegment = localAddress.toJavaAddress().convert(tempArena)
                 val remoteAddressSegment = remoteAddress.toJavaAddress().convert(tempArena)
                 val libQuicheConfig = buildConfig(quicConfiguration, tempArena)
                 val quicheConnection = Quiche.quiche_accept(
-                    scidSegment,
-                    scidSegment.byteSize(),
-                    odcidSegment,
-                    odcidSegment.byteSize(),
+                    scid.segment,
+                    scid.segment.byteSize(),
+                    odcid.segment,
+                    odcid.segment.byteSize(),
                     localAddressSegment,
                     localAddressSegment.byteSize().toInt(),
                     remoteAddressSegment,
@@ -184,7 +143,7 @@ class QuicheServerSocket(
                     arena.close()
                     return null
                 }
-                return QuicheServerConnection(arena, scidSegment, quicheConnection)
+                return QuicheServerConnection(arena, quicheConnection)
             }
         } catch (e: Exception) {
             arena.close()
@@ -192,14 +151,14 @@ class QuicheServerSocket(
         }
     }
 
-    private suspend fun versionNegotiation(remoteAddress: InetSocketAddress, quicHeader: QuicHeaderOld) {
+    private suspend fun versionNegotiation(remoteAddress: InetSocketAddress, quicHeader: QuicHeader) {
         Arena.ofShared().use { arena ->
             val out = arena.allocate(MAX_DATAGRAM_SIZE.toLong())
             val length = Quiche.quiche_negotiate_version(
-                quicHeader.scidSegment,
-                quicHeader.scidLength.toLong(),
-                quicHeader.dcidSegment,
-                quicHeader.dcidLength.toLong(),
+                quicHeader.scid.segment,
+                quicHeader.scid.size.toLong(),
+                quicHeader.dcid.segment,
+                quicHeader.dcid.size.toLong(),
                 out,
                 MAX_DATAGRAM_SIZE.toLong(),
             )
@@ -208,8 +167,8 @@ class QuicheServerSocket(
         }
     }
 
-    private suspend fun statelessRetry(quicHeader: QuicHeaderOld, remoteAddress: InetSocketAddress) {
-        val token = mintToken(quicHeader.dcid, remoteAddress)
+    private suspend fun statelessRetry(quicHeader: QuicHeader, remoteAddress: InetSocketAddress) {
+        val token = mintToken(quicHeader.dcid.bytes, remoteAddress)
         val newCid = ByteArray(QUICHE_MAX_CONN_ID_LEN.toInt())
         Random.nextBytes(newCid)
         Arena.ofShared().use { arena ->
@@ -217,10 +176,10 @@ class QuicheServerSocket(
             val tokenSegment = token.toMemorySegment(arena)
             val out = arena.allocate(MAX_DATAGRAM_SIZE.toLong())
             val length = Quiche.quiche_retry(
-                quicHeader.scidSegment,
-                quicHeader.scidLength.toLong(),
-                quicHeader.dcidSegment,
-                quicHeader.dcidLength.toLong(),
+                quicHeader.scid.segment,
+                quicHeader.scid.size.toLong(),
+                quicHeader.dcid.segment,
+                quicHeader.dcid.size.toLong(),
                 newCidSegment,
                 QUICHE_MAX_CONN_ID_LEN,
                 tokenSegment,
@@ -234,16 +193,15 @@ class QuicheServerSocket(
         }
     }
 
-    private fun mintToken(dcid: QuicheConnectionId, remoteAddress: InetSocketAddress): ByteArray {
+    private fun mintToken(dcidBytes: ByteArray, remoteAddress: InetSocketAddress): ByteArray {
         val name = "kotlin-quic".toByteArray(StandardCharsets.US_ASCII)
         val address = remoteAddress.resolveAddress() ?: byteArrayOf()
         val port = remoteAddress.port
-        val connectionId = dcid.connectionId
-        val token = ByteBuffer.allocate(name.size + address.size + 4 + connectionId.size)
+        val token = ByteBuffer.allocate(name.size + address.size + 4 + dcidBytes.size)
         token.put(name)
         token.put(address)
         token.putInt(port)
-        token.put(connectionId)
+        token.put(dcidBytes)
         return token.array()
     }
 

@@ -1,21 +1,16 @@
 package org.erwinkok.quic.common
 
-import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.utils.io.core.remaining
 import kotlinx.io.Source
 import kotlinx.io.readByteArray
 import kotlinx.io.readUInt
 import org.erwinkok.quic.common.QuicheConstants.QUICHE_MAX_CONN_ID_LEN
 import java.lang.foreign.Arena
-import java.lang.foreign.MemorySegment
 import java.lang.foreign.SegmentAllocator
-import java.lang.foreign.ValueLayout.JAVA_LONG
-
-private val logger = KotlinLogging.logger {}
 
 class QuicHeader(
     private val arena: Arena,
-    val version: Long,
+    val version: Int,
     val type: QuicPacketType,
     val scid: BinaryDataHolder,
     val dcid: BinaryDataHolder,
@@ -40,34 +35,34 @@ class QuicHeader(
                 return if (hasShortHeader(first)) {
                     // See https://www.rfc-editor.org/rfc/rfc9000.html#section-17.3
                     // 1-RTT Packet {
-                    //  Header Form (1) = 0,
-                    //  Fixed Bit (1) = 1,
-                    //  Spin Bit (1),
-                    //  Reserved Bits (2),
-                    //  Key Phase (1),
-                    //  Packet Number Length (2),
-                    //  Destination Connection ID (0..160),
-                    //  Packet Number (8..32),
-                    //  Packet Payload (8..),
-                    //}
+                    //   Header Form (1) = 0,
+                    //   Fixed Bit (1) = 1,
+                    //   Spin Bit (1),
+                    //   Reserved Bits (2),
+                    //   Key Phase (1),
+                    //   Packet Number Length (2),
+                    //   Destination Connection ID (0..160),
+                    //   Packet Number (8..32),
+                    //   Packet Payload (8..),
+                    // }
                     val dcid = sliceBinaryArray(inputSource, arena, QUICHE_MAX_CONN_ID_LEN.toInt())
                     QuicHeader(arena, 0, QuicPacketType.SHORT, BinaryDataHolder.NULL, dcid, BinaryDataHolder.NULL)
                 } else {
                     // See https://www.rfc-editor.org/rfc/rfc9000.html#section-17.2
                     // Long Header Packet {
-                    //  Header Form (1) = 1,
-                    //  Fixed Bit (1) = 1,
-                    //  Long Packet Type (2),
-                    //  Type-Specific Bits (4),
-                    //  Version (32),
-                    //  Destination Connection ID Length (8),
-                    //  Destination Connection ID (0..160),
-                    //  Source Connection ID Length (8),
-                    //  Source Connection ID (0..160),
-                    //  Type-Specific Payload (..),
-                    //}
+                    //   Header Form (1) = 1,
+                    //   Fixed Bit (1) = 1,
+                    //   Long Packet Type (2),
+                    //   Type-Specific Bits (4),
+                    //   Version (32),
+                    //   Destination Connection ID Length (8),
+                    //   Destination Connection ID (0..160),
+                    //   Source Connection ID Length (8),
+                    //   Source Connection ID (0..160),
+                    //   Type-Specific Payload (..),
+                    // }
                     checkReadable(inputSource, Int.SIZE_BYTES + Byte.SIZE_BYTES)
-                    val version = inputSource.readUInt().toLong()
+                    val version = inputSource.readUInt().toInt()
 
                     val type = typeOfLongHeader(first, version)
 
@@ -89,8 +84,8 @@ class QuicHeader(
             }
         }
 
-        private fun typeOfLongHeader(first: Byte, version: Long): QuicPacketType {
-            if (version == 0L) {
+        private fun typeOfLongHeader(first: Byte, version: Int): QuicPacketType {
+            if (version == 0) {
                 // If we parsed a version of 0 we are sure it's a version negotiation packet:
                 // https://www.rfc-editor.org/rfc/rfc9000.html#section-17.2.1
                 //
@@ -110,11 +105,7 @@ class QuicHeader(
         private fun sliceBinaryArray(inputSource: Source, arena: SegmentAllocator, length: Int): BinaryDataHolder {
             checkReadable(inputSource, length)
             val bytes = inputSource.readByteArray(length)
-            val segment = arena.allocate(length.toLong())
-            segment.copyFrom(MemorySegment.ofArray(bytes))
-            val lengthSegment = arena.allocate(JAVA_LONG.byteSize())
-            lengthSegment.set(JAVA_LONG, 0L, length.toLong())
-            return BinaryDataHolder(bytes, segment, lengthSegment)
+            return BinaryDataHolder.of(bytes, arena)
         }
 
         private fun sliceToken(type: QuicPacketType, inputSource: Source, arena: SegmentAllocator): BinaryDataHolder {
