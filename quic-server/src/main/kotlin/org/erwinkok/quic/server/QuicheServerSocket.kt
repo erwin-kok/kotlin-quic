@@ -7,6 +7,7 @@ import io.ktor.network.sockets.Datagram
 import io.ktor.network.sockets.InetSocketAddress
 import io.ktor.network.sockets.aSocket
 import io.ktor.network.sockets.toJavaAddress
+import io.ktor.utils.io.core.buildPacket
 import io.ktor.utils.io.core.remaining
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -17,6 +18,7 @@ import kotlinx.coroutines.launch
 import kotlinx.io.readByteArray
 import org.erwinkok.quic.common.AwaitableClosable
 import org.erwinkok.quic.common.QuicConfiguration
+import org.erwinkok.quic.common.QuicHeaderOld
 import org.erwinkok.quic.common.QuicHeader
 import org.erwinkok.quic.common.QuicheConnectionId
 import org.erwinkok.quic.common.QuicheConstants.QUICHE_MAX_CONN_ID_LEN
@@ -74,8 +76,19 @@ class QuicheServerSocket(
                     val byteArray = datagram.packet.readByteArray()
                     val inputSegment = arena.allocate(byteArray.size.toLong())
                     inputSegment.copyFrom(MemorySegment.ofArray(byteArray))
-                    val quicHeader = QuicHeader.parse(inputSegment)
+                    val quicHeader = QuicHeaderOld.parse(inputSegment)
                     logger.debug { "quic header: $quicHeader" }
+
+                    val qh = QuicHeader.parse(
+                        buildPacket {
+                            write(byteArray)
+                        },
+                    )
+
+                    val s = qh.token.bytes?.size ?: 0
+                    if (s > 0) {
+                        println()
+                    }
 
                     val connectionId = quicHeader.dcid
                     var connection = connections[connectionId]
@@ -117,7 +130,7 @@ class QuicheServerSocket(
         context.complete()
     }
 
-    private suspend fun negotiate(remoteAddress: InetSocketAddress, quicHeader: QuicHeader): QuicheServerConnection? {
+    private suspend fun negotiate(remoteAddress: InetSocketAddress, quicHeader: QuicHeaderOld): QuicheServerConnection? {
         if (!Quiche.quiche_version_is_supported(quicHeader.version)) {
             logger.debug { "version negotiation" }
             versionNegotiation(remoteAddress, quicHeader)
@@ -179,7 +192,7 @@ class QuicheServerSocket(
         }
     }
 
-    private suspend fun versionNegotiation(remoteAddress: InetSocketAddress, quicHeader: QuicHeader) {
+    private suspend fun versionNegotiation(remoteAddress: InetSocketAddress, quicHeader: QuicHeaderOld) {
         Arena.ofShared().use { arena ->
             val out = arena.allocate(MAX_DATAGRAM_SIZE.toLong())
             val length = Quiche.quiche_negotiate_version(
@@ -195,7 +208,7 @@ class QuicheServerSocket(
         }
     }
 
-    private suspend fun statelessRetry(quicHeader: QuicHeader, remoteAddress: InetSocketAddress) {
+    private suspend fun statelessRetry(quicHeader: QuicHeaderOld, remoteAddress: InetSocketAddress) {
         val token = mintToken(quicHeader.dcid, remoteAddress)
         val newCid = ByteArray(QUICHE_MAX_CONN_ID_LEN.toInt())
         Random.nextBytes(newCid)
