@@ -10,6 +10,7 @@ import org.erwinkok.quic.common.QuicError
 import org.erwinkok.quic.common.quiche.Quiche
 import org.erwinkok.quic.common.quiche.QuicheError
 import org.erwinkok.quic.common.quiche.QuicheRecvInfo
+import org.erwinkok.quic.common.toByteArray
 import java.lang.foreign.Arena
 import java.lang.foreign.MemoryLayout
 import java.lang.foreign.MemorySegment
@@ -29,7 +30,7 @@ class QuicheServerConnection(
     private val lock = ReentrantLock()
     private val recvInfo = QuicheRecvInfo.allocate(arena)
 
-    fun feedCypherBytes(inputSource: Source, inetLocalAddress: InetSocketAddress, remoteAddress: InetSocketAddress) {
+    fun feedCipherBytes(inputSource: Source, inetLocalAddress: InetSocketAddress, remoteAddress: InetSocketAddress) {
         Arena.ofConfined().use { tempArena ->
             val bytes = inputSource.readByteArray()
             val segment = tempArena.allocate(bytes.size.toLong())

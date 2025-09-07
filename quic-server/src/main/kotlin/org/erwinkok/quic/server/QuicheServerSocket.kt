@@ -21,9 +21,11 @@ import org.erwinkok.quic.common.QuicHeader
 import org.erwinkok.quic.common.QuicheConstants.QUICHE_MAX_CONN_ID_LEN
 import org.erwinkok.quic.common.QuicheConstants.QUICHE_PROTOCOL_VERSION
 import org.erwinkok.quic.common.quiche.Quiche
+import org.erwinkok.quic.common.quiche.QuicheError
 import org.erwinkok.quic.common.quiche.convert
 import org.erwinkok.quic.common.toMemorySegment
 import org.erwinkok.quic.common.toPacket
+import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
@@ -77,7 +79,7 @@ class QuicheServerSocket(
                     connection = negotiate(remoteAddress, quicHeader)
                 }
                 if (connection != null) {
-                    connection.feedCypherBytes(inputSource, inetLocalAddress, remoteAddress)
+                    connection.feedCipherBytes(inputSource, inetLocalAddress, remoteAddress)
                 }
             }
         }.invokeOnCompletion {
@@ -240,6 +242,103 @@ class QuicheServerSocket(
         val quicheConfig = Quiche.quiche_config_new(QUICHE_PROTOCOL_VERSION)
         if (quicheConfig == null) {
             throw IOException("Failed to create quiche config")
+        }
+        val verifyPeer = config.verifyPeer
+        if (verifyPeer != null) {
+            Quiche.quiche_config_verify_peer(quicheConfig, verifyPeer)
+        }
+        val trustedCertsPemPath = config.trustedCertificatesPemPath
+        if (trustedCertsPemPath != null) {
+            val rc = Quiche.quiche_config_load_verify_locations_from_file(quicheConfig, allocator.allocateUtf8String(trustedCertsPemPath.toString()))
+            if (rc < 0) {
+                throw IOException("Error loading trusted certificates file " + trustedCertsPemPath + " : " + QuicheError.errorString(rc))
+            }
+        }
+        val certChainPemPath = config.certificateChainPemPath
+        if (certChainPemPath != null) {
+            val rc = Quiche.quiche_config_load_cert_chain_from_pem_file(quicheConfig, allocator.allocateUtf8String(certChainPemPath.toString()))
+            if (rc < 0) {
+                throw IOException("Error loading certificate chain file " + certChainPemPath + " : " + QuicheError.errorString(rc))
+            }
+        }
+        val privKeyPemPath = config.privateKeyPemPath
+        if (privKeyPemPath != null) {
+            val rc = Quiche.quiche_config_load_priv_key_from_pem_file(quicheConfig, allocator.allocateUtf8String(privKeyPemPath.toString()))
+            if (rc < 0) {
+                throw IOException("Error loading private key file " + privKeyPemPath + " : " + QuicheError.errorString(rc))
+            }
+        }
+        val applicationProtos = config.applicationProtocols
+        if (!applicationProtos.isNullOrEmpty()) {
+            val baos = ByteArrayOutputStream()
+            for (proto in applicationProtos) {
+                val bytes = proto.toByteArray(StandardCharsets.UTF_8)
+                baos.write(bytes.size)
+                baos.write(bytes)
+            }
+            val bytes = baos.toByteArray()
+            val segment = allocator.allocate(bytes.size.toLong())
+            segment.asByteBuffer().put(bytes)
+            val rc = Quiche.quiche_config_set_application_protos(quicheConfig, segment, segment.byteSize())
+            if (rc < 0) {
+                throw IOException("Error setting application protocols : " + QuicheError.errorString(rc))
+            }
+        }
+        val cc = config.congestionControlAlgorithm
+        if (cc != null) {
+            Quiche.quiche_config_set_cc_algorithm(quicheConfig, cc.value)
+        }
+        val maxIdleTimeout = config.maxIdleTimeout
+        if (maxIdleTimeout != null) {
+            Quiche.quiche_config_set_max_idle_timeout(quicheConfig, maxIdleTimeout)
+        }
+        val initialMaxData = config.initialMaxData
+        if (initialMaxData != null) {
+            Quiche.quiche_config_set_initial_max_data(quicheConfig, initialMaxData)
+        }
+        val initialMaxStreamDataBidiLocal = config.initialMaxStreamDataBidiLocal
+        if (initialMaxStreamDataBidiLocal != null) {
+            Quiche.quiche_config_set_initial_max_stream_data_bidi_local(quicheConfig, initialMaxStreamDataBidiLocal.toLong())
+        }
+        val initialMaxStreamDataBidiRemote = config.initialMaxStreamDataBidiRemote
+        if (initialMaxStreamDataBidiRemote != null) {
+            Quiche.quiche_config_set_initial_max_stream_data_bidi_remote(quicheConfig, initialMaxStreamDataBidiRemote.toLong())
+        }
+        val initialMaxStreamDataUni = config.initialMaxStreamDataUni
+        if (initialMaxStreamDataUni != null) {
+            Quiche.quiche_config_set_initial_max_stream_data_uni(quicheConfig, initialMaxStreamDataUni)
+        }
+        val initialMaxStreamsBidi = config.initialMaxStreamsBidi
+        if (initialMaxStreamsBidi != null) {
+            Quiche.quiche_config_set_initial_max_streams_bidi(quicheConfig, initialMaxStreamsBidi)
+        }
+        val initialMaxStreamsUni = config.initialMaxStreamsUni
+        if (initialMaxStreamsUni != null) {
+            Quiche.quiche_config_set_initial_max_streams_uni(quicheConfig, initialMaxStreamsUni)
+        }
+        val disableActiveMigration: Boolean? = config.disableActiveMigration
+        if (disableActiveMigration != null) {
+            Quiche.quiche_config_set_disable_active_migration(quicheConfig, disableActiveMigration)
+        }
+        val maxConnectionWindow = config.maxConnectionWindow
+        if (maxConnectionWindow != null) {
+            Quiche.quiche_config_set_max_connection_window(quicheConfig, maxConnectionWindow)
+        }
+        val maxStreamWindow = config.maxStreamWindow
+        if (maxStreamWindow != null) {
+            Quiche.quiche_config_set_max_stream_window(quicheConfig, maxStreamWindow)
+        }
+        val activeConnectionIdLimit = config.activeConnectionIdLimit
+        if (activeConnectionIdLimit != null) {
+            Quiche.quiche_config_set_active_connection_id_limit(quicheConfig, activeConnectionIdLimit)
+        }
+        val maxReceiveUdpPayloadSize = config.maxReceiveUdpPayloadSize
+        if (maxReceiveUdpPayloadSize != null) {
+            Quiche.quiche_config_set_max_recv_udp_payload_size(quicheConfig, maxReceiveUdpPayloadSize)
+        }
+        val maxSendUdpPayloadSize = config.maxSendUdpPayloadSize
+        if (maxSendUdpPayloadSize != null) {
+            Quiche.quiche_config_set_max_send_udp_payload_size(quicheConfig, maxSendUdpPayloadSize)
         }
         return quicheConfig
     }

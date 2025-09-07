@@ -19,12 +19,13 @@ fun main() {
     runBlocking {
         logger.info { "Starting QuicServer..." }
         val quicConfiguration = QuicConfiguration(
-            certificateChainPemPath = Path("./cert.crt"),
-            privateKeyPemPath = Path("./cert.key"),
+            verifyPeer = false,
+            certificateChainPemPath = Path("./certs/cert.crt"),
+            privateKeyPemPath = Path("./certs/cert.key"),
             applicationProtocols = listOf("http/0.9"),
             maxIdleTimeout = 5000,
-            maxReceiveUdpPayloadSize = MAX_DATAGRAM_SIZE,
-            maxSendUdpPayloadSize = MAX_DATAGRAM_SIZE,
+            maxReceiveUdpPayloadSize = MAX_DATAGRAM_SIZE.toLong(),
+            maxSendUdpPayloadSize = MAX_DATAGRAM_SIZE.toLong(),
             initialMaxData = 10000000,
             initialMaxStreamDataBidiLocal = 1000000,
             initialMaxStreamDataBidiRemote = 1000000,

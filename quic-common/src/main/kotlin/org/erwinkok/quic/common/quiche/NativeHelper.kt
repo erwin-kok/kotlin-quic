@@ -24,7 +24,7 @@ object NativeHelper {
     val C_SHORT: ValueLayout.OfShort = ValueLayout.JAVA_SHORT
     val C_INT: ValueLayout.OfInt = ValueLayout.JAVA_INT
     val C_LONG: ValueLayout.OfLong = ValueLayout.JAVA_LONG
-    val C_POINTER = ValueLayout.ADDRESS.withTargetLayout(MemoryLayout.sequenceLayout(Long.Companion.MAX_VALUE, ValueLayout.JAVA_BYTE))
+    val C_POINTER = ValueLayout.ADDRESS.withTargetLayout(MemoryLayout.sequenceLayout(Long.MAX_VALUE, ValueLayout.JAVA_BYTE))
     val Platform: PlatformType
 
     private val SYMBOL_LOOKUP = SymbolLookup.loaderLookup().or(Linker.nativeLinker().defaultLookup())
