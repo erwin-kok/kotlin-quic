@@ -12,17 +12,16 @@ class BinaryDataHolder private constructor(
     private val hashCode = bytes.contentHashCode()
 
     val size = bytes.size
-
     val isEmpty = bytes.isEmpty()
 
     override fun equals(other: Any?): Boolean {
         if (other === this) {
             return true
         }
-        if (other !is QuicheConnectionId) {
+        if (other !is BinaryDataHolder) {
             return super.equals(other)
         }
-        return bytes.contentEquals(other.connectionId)
+        return bytes.contentEquals(other.bytes)
     }
 
     override fun hashCode(): Int {

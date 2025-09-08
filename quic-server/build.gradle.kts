@@ -11,6 +11,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines)
     implementation(libs.kotlin.logging)
     implementation(libs.ktor.network)
+    implementation("org.jetbrains.kotlinx:kotlinx-io-core:0.8.0")
 
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.mockito.kotlin)

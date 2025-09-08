@@ -28,7 +28,7 @@ class QuicHeader(
         private const val AES_128_GCM_TAG_LENGTH = 16
 
         fun parse(inputSource: Source): QuicHeader {
-            val arena = Arena.ofConfined()
+            val arena = Arena.ofShared()
             try {
                 checkReadable(inputSource, Byte.SIZE_BYTES)
                 val first = inputSource.readByte()
@@ -169,7 +169,7 @@ class QuicHeader(
         }
 
         private fun checkReadable(inputSource: Source, needed: Int) {
-            if (inputSource.remaining < needed) {
+            if (!inputSource.request(needed.toLong())) {
                 throw QuicException("Not enough bytes to read, ${inputSource.remaining} < $needed", QuicTransportError.PROTOCOL_VIOLATION)
             }
         }

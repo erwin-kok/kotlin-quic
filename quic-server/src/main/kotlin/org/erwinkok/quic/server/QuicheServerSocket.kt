@@ -18,6 +18,7 @@ import org.erwinkok.quic.common.AwaitableClosable
 import org.erwinkok.quic.common.BinaryDataHolder
 import org.erwinkok.quic.common.QuicConfiguration
 import org.erwinkok.quic.common.QuicHeader
+import org.erwinkok.quic.common.QuicheConnectionId
 import org.erwinkok.quic.common.QuicheConstants.QUICHE_MAX_CONN_ID_LEN
 import org.erwinkok.quic.common.QuicheConstants.QUICHE_PROTOCOL_VERSION
 import org.erwinkok.quic.common.quiche.Quiche
@@ -44,7 +45,7 @@ class QuicheServerSocket(
     private val socket: BoundDatagramSocket,
 ) : AwaitableClosable {
     private val context = Job(scope.coroutineContext[Job])
-    private val connections = ConcurrentHashMap<BinaryDataHolder, QuicheServerConnection>()
+    private val connections = ConcurrentHashMap<QuicheConnectionId, QuicheServerConnection>()
     private val receiveChannel = socket.incoming
     private val sendChannel = socket.outgoing
 
@@ -69,17 +70,18 @@ class QuicheServerSocket(
 
                 logger.debug { "message received from $remoteAddress (${datagram.packet.remaining} bytes)" }
 
-                val inputSource = datagram.packet
-                val quicHeader = QuicHeader.parse(inputSource)
-                logger.debug { "quic header: $quicHeader" }
+                val packet = datagram.packet
+                QuicHeader.parse(packet.peek()).use { quicHeader ->
+                    logger.debug { "quic header: $quicHeader" }
 
-                val connectionId = quicHeader.dcid
-                var connection = connections[connectionId]
-                if (connection == null) {
-                    connection = negotiate(remoteAddress, quicHeader)
-                }
-                if (connection != null) {
-                    connection.feedCipherBytes(inputSource, inetLocalAddress, remoteAddress)
+                    val connectionId = QuicheConnectionId(quicHeader.dcid.bytes)
+                    var connection = connections[connectionId]
+                    if (connection == null) {
+                        connection = negotiate(remoteAddress, quicHeader)
+                    }
+                    if (connection != null) {
+                        connection.feedCipherBytes(packet, inetLocalAddress, remoteAddress)
+                    }
                 }
             }
         }.invokeOnCompletion {
@@ -117,7 +119,7 @@ class QuicheServerSocket(
         localAddress: InetSocketAddress,
         remoteAddress: InetSocketAddress,
     ): QuicheServerConnection? {
-        val arena = Arena.ofConfined()
+        val arena = Arena.ofShared()
         try {
             Arena.ofShared().use { tempArena ->
                 if (scid.size != QUICHE_MAX_CONN_ID_LEN.toInt()) {
@@ -145,7 +147,10 @@ class QuicheServerSocket(
                     arena.close()
                     return null
                 }
-                return QuicheServerConnection(arena, quicheConnection)
+                val cid = QuicheConnectionId(scid.bytes)
+                val connection = QuicheServerConnection(arena, quicheConnection, cid)
+                connections[cid] = connection
+                return connection
             }
         } catch (e: Exception) {
             arena.close()
